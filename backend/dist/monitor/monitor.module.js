@@ -13,13 +13,31 @@ const monitor_engine_service_1 = require("./monitor-engine/monitor-engine.servic
 const oauth_manager_service_1 = require("./oauth-manager/oauth-manager.service");
 const axios_1 = require("@nestjs/axios");
 const config_1 = require("@nestjs/config");
+const bull_1 = require("@nestjs/bull");
+const typeorm_1 = require("@nestjs/typeorm");
+const monitor_log_entity_1 = require("./entities/monitor-log.entity");
+const monitor_processor_1 = require("./monitor.processor");
+const task_scheduler_service_1 = require("./task-scheduler.service");
 let MonitorModule = class MonitorModule {
 };
 exports.MonitorModule = MonitorModule;
 exports.MonitorModule = MonitorModule = __decorate([
     (0, common_1.Module)({
-        imports: [axios_1.HttpModule, config_1.ConfigModule],
-        providers: [openapi_parser_service_1.OpenapiParserService, monitor_engine_service_1.MonitorEngineService, oauth_manager_service_1.OauthManagerService],
+        imports: [
+            axios_1.HttpModule,
+            config_1.ConfigModule,
+            bull_1.BullModule.registerQueue({
+                name: 'monitor',
+            }),
+            typeorm_1.TypeOrmModule.forFeature([monitor_log_entity_1.MonitorLog]),
+        ],
+        providers: [
+            openapi_parser_service_1.OpenapiParserService,
+            monitor_engine_service_1.MonitorEngineService,
+            oauth_manager_service_1.OauthManagerService,
+            monitor_processor_1.MonitorProcessor,
+            task_scheduler_service_1.TaskSchedulerService
+        ],
         exports: [openapi_parser_service_1.OpenapiParserService, monitor_engine_service_1.MonitorEngineService, oauth_manager_service_1.OauthManagerService],
     })
 ], MonitorModule);

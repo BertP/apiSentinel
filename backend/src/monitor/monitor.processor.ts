@@ -1,10 +1,10 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
-import { Job } from 'bull';
-import { MonitorEngineService } from '../monitor-engine/monitor-engine.service';
+import type { Job } from 'bull';
+import { MonitorEngineService } from './monitor-engine/monitor-engine.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { MonitorLog } from '../entities/monitor-log.entity';
+import { MonitorLog } from './entities/monitor-log.entity';
 import { ConfigService } from '@nestjs/config';
 
 @Processor('monitor')
@@ -21,9 +21,11 @@ export class MonitorProcessor {
     @Process('check')
     async handleCheck(job: Job<any>) {
         const { path, method } = job.data;
-        const baseUrl = this.configService.get<string>('API_BASE_URL') || 'https://jsonplaceholder.typicode.com';
 
-        this.logger.log(`Processing check for ${method} ${path}`);
+        // Priority: env variable > default
+        const baseUrl = this.configService.get<string>('API_BASE_URL') || 'https://api.mcs3.miele.com/v1';
+
+        this.logger.log(`Processing check for ${method} ${path} on ${baseUrl}`);
 
         const result = await this.monitorEngine.checkEndpoint(baseUrl, { path, method });
 

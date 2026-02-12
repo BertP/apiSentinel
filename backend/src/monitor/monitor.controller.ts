@@ -26,7 +26,7 @@ export class MonitorController {
         });
 
         // Group by path and method for overview
-        const stats = {};
+        const stats: Record<string, any> = {};
         logs.forEach(log => {
             const key = `${log.method} ${log.path}`;
             if (!stats[key]) {

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import SwaggerParser from '@apidevtools/swagger-parser';
 import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class OpenapiParserService {
@@ -8,9 +9,17 @@ export class OpenapiParserService {
 
     async parseDefinition(filePath: string): Promise<any> {
         try {
-            const absolutePath = path.isAbsolute(filePath)
+            let absolutePath = path.isAbsolute(filePath)
                 ? filePath
                 : path.join(process.cwd(), filePath);
+
+            // Support looking in parent directory (root from backend/)
+            if (!fs.existsSync(absolutePath)) {
+                const parentPath = path.join(process.cwd(), '..', filePath);
+                if (fs.existsSync(parentPath)) {
+                    absolutePath = parentPath;
+                }
+            }
 
             this.logger.log(`Parsing OpenAPI definition from: ${absolutePath}`);
             const api = await SwaggerParser.parse(absolutePath);
@@ -35,7 +44,7 @@ export class OpenapiParserService {
                     endpoints.push({
                         path: pathKey,
                         method: method.toUpperCase(),
-                        summary: operation.summary || '',
+                        summary: operation.summary || operation.description || '',
                         operationId: operation.operationId,
                     });
                 }

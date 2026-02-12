@@ -47,13 +47,20 @@ exports.OpenapiParserService = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_parser_1 = __importDefault(require("@apidevtools/swagger-parser"));
 const path = __importStar(require("path"));
+const fs = __importStar(require("fs"));
 let OpenapiParserService = OpenapiParserService_1 = class OpenapiParserService {
     logger = new common_1.Logger(OpenapiParserService_1.name);
     async parseDefinition(filePath) {
         try {
-            const absolutePath = path.isAbsolute(filePath)
+            let absolutePath = path.isAbsolute(filePath)
                 ? filePath
                 : path.join(process.cwd(), filePath);
+            if (!fs.existsSync(absolutePath)) {
+                const parentPath = path.join(process.cwd(), '..', filePath);
+                if (fs.existsSync(parentPath)) {
+                    absolutePath = parentPath;
+                }
+            }
             this.logger.log(`Parsing OpenAPI definition from: ${absolutePath}`);
             const api = await swagger_parser_1.default.parse(absolutePath);
             return api;
@@ -77,7 +84,7 @@ let OpenapiParserService = OpenapiParserService_1 = class OpenapiParserService {
                     endpoints.push({
                         path: pathKey,
                         method: method.toUpperCase(),
-                        summary: operation.summary || '',
+                        summary: operation.summary || operation.description || '',
                         operationId: operation.operationId,
                     });
                 }

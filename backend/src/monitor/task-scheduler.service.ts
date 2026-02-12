@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
+import type { Queue } from 'bull';
 import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
 import { ConfigService } from '@nestjs/config';
 
