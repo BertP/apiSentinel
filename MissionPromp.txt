@@ -1,0 +1,45 @@
+Mission Prompt: API Sentinel Monitor
+Projekt-Ziel:
+Entwickle eine Fullstack-Monitoring-Anwendung ("API Sentinel"), die eine OpenAPI-Spezifikation (YAML) einliest und alle definierten Endpunkte zyklisch auf Erreichbarkeit und Performance prüft.
+
+Repository & Deployment:
+
+GitHub URL: https://github.com/BertP/apiMonitor
+
+Ziel-Pfad (Ubuntu): /opt/apiMonitor (Alle Docker-Volumes und Pfade im docker-compose.yml müssen auf diesen absoluten Pfad oder relative Unterordner ausgelegt sein).
+
+Core Tech Stack:
+
+Backend: Node.js (NestJS oder Express) mit TypeScript.
+
+Frontend: React (mit Tailwind CSS) oder Angular.
+
+Datenbank: PostgreSQL für historische Logs & Redis für die Task-Queue.
+
+Infrastruktur: Docker & Docker Compose (inkl. Neustart-Policies).
+
+Funktionale Anforderungen:
+
+OpenAPI Integration: Einlesen der openapi.yaml. Extraktion von Pfaden, Methoden und benötigten Scopes.
+
+OAuth2 Manager: Automatisierte Token-Beschaffung via ClientID, ClientSecret, Username und Password. Implementierung eines Token-Refresh-Mechanismus.
+
+Monitoring Engine: Ein Hintergrund-Worker, der die Endpunkte der Ziel-API in festen Intervallen ansteuert.
+
+Datenmodell: Speicherung von Response-Time, Status-Code und Payload-Validierungsergebnissen.
+
+Visualisierungs-Dashboard:
+
+Health-Matrix: Schneller Überblick über alle Endpunkte.
+
+Latency-Graphs: Zeitverlauf der Antwortzeiten pro Endpunkt.
+
+Logs: Detaillierte Ansicht fehlgeschlagener Requests.
+
+Entwicklungs-Guidelines:
+
+Cross-Platform: Das Setup muss nahtlos zwischen Windows 11 (Entwicklung) und dem Zielpfad /opt/apiMonitor auf Ubuntu (Produktion) funktionieren.
+
+Security: Credentials dürfen niemals hartcodiert sein (Nutzung von .env.example).
+
+CI/CD: Erstelle ein einfaches GitHub Action Script, das bei einem Push auf den main Branch die Anwendung baut.

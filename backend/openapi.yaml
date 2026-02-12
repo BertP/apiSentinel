@@ -1,0 +1,30 @@
+openapi: 3.0.0
+info:
+  title: Sample API
+  version: 1.0.0
+servers:
+  - url: https://jsonplaceholder.typicode.com
+paths:
+  /posts:
+    get:
+      summary: List all posts
+      responses:
+        '200':
+          description: Successful response
+  /posts/1:
+    get:
+      summary: Get a single post
+      responses:
+        '200':
+          description: Successful response
+    put:
+      summary: Update a post
+      responses:
+        '200':
+          description: Successful response
+  /comments:
+    get:
+      summary: List all comments
+      responses:
+        '200':
+          description: Successful response
