@@ -1,15 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Shield, List, BarChart3, Clock, AlertCircle, CheckCircle2, TrendingUp } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 const API_BASE = 'http://localhost:3000/monitor';
 
+interface Stat {
+  path: string;
+  method: string;
+  count: number;
+  successCount: number;
+  avgLatency: number;
+  lastStatus: number;
+  lastTimestamp: string;
+}
+
+interface Log {
+  timestamp: string;
+  path: string;
+  method: string;
+  statusCode: number;
+  latency: number;
+  success: boolean;
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [stats, setStats] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<Stat[]>([]);
+  const [logs, setLogs] = useState<Log[]>([]);
 
   const fetchData = async () => {
     try {
@@ -21,8 +39,6 @@ function App() {
       setLogs(logsRes.data);
     } catch (err) {
       console.error('Error fetching data:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -32,7 +48,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const getChartData = (path, method) => {
+  const getChartData = (path: string, method: string) => {
     return logs
       .filter(l => l.path === path && l.method === method)
       .slice(0, 20)
@@ -71,6 +87,15 @@ function App() {
             <List className="w-5 h-5" />
             <span className="font-medium">Logs</span>
           </button>
+          <a
+            href="http://localhost:3000/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-all duration-200"
+          >
+            <Shield className="w-5 h-5 text-blue-500" />
+            <span className="font-medium">API Docs</span>
+          </a>
         </nav>
       </div>
 
