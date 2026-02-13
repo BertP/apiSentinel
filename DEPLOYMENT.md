@@ -1,58 +1,59 @@
-# Deployment Guide: Ubuntu Server
+# Deployment Guide: Production Environment
 
-Follow these steps to deploy **API Sentinel Monitor** on your Ubuntu Server.
+This guide explains how to deploy the full **API Sentinel** stack to a production server (e.g., Ubuntu).
 
-## Prerequisites
-Ensure your server has the following installed:
-- **Docker**: [Installation Guide](https://docs.docker.com/engine/install/ubuntu/)
-- **Docker Compose**: Usually included with Docker Desktop, or install via `sudo apt install docker-compose-v2`
+## 🛠️ Prerequisites
 
-## 1. Prepare Target Directory
-The application is configured to run from `/opt/apiMonitor`.
+- **Docker & Docker Compose**
+- **Public Domain** (or Static IP)
+- **SSL Certificate** (Recommended for production)
+
+## 📦 Deployment Steps
+
+### 1. Clone & Configure
 
 ```bash
-sudo mkdir -p /opt/apiMonitor
-sudo chown $USER:$USER /opt/apiMonitor
+git clone https://github.com/BertP/apiSimulation.git /opt/apiMonitor
 cd /opt/apiMonitor
-```
-
-## 2. Clone/Copy Project
-Clone the repository or copy the project files to the target directory.
-
-```bash
-git clone https://github.com/BertP/apiMonitor .
-```
-
-## 3. Configure Environment
-Create the `.env` file from the provided example.
-
-```bash
 cp .env.example .env
-nano .env # Update with your specific credentials and URLs
+nano .env # update your credentials!
 ```
 
-> [!IMPORTANT]
-> Ensure `DB_PASSWORD` and `OAUTH2` credentials in `.env` match your target environment.
+### 2. Launch with Docker Compose
 
-## 4. Launch with Docker Compose
-The `docker-compose.yml` is configured for production-ready service orchestration.
+The `docker-compose.yml` file is configured to orchestrate everything:
 
 ```bash
 docker compose up -d --build
 ```
 
-## 5. Verify Deployment
-Check the status of the containers:
+### 3. Verification
 
+- **Dashboard**: `http://your-server-ip`
+- **Backend API**: `http://your-server-ip:3000`
+- **Logs**: `docker compose logs -f`
+
+## 🏗️ Docker Architecture Detail
+
+- **PostgreSQL**: Stores logs and auth statistics on a named volume `postgres_data`.
+- **Redis**: Acts as the worker queue broker.
+- **Backend**: Auto-syncs `openapi.yaml` and executes monitoring jobs.
+- **Frontend**: Served via Nginx on port 80.
+
+## 🛡️ Production Recommendations
+
+### Security
+- **Fail2Ban**: Install to protect SSH and API ports.
+- **Firewall**: Ensure only ports 80, 443, and 3000 (if needed) are open.
+
+### Monitoring the Monitor
+- Periodically check the **OAuth2 Health Widget** in the dashboard to ensure the backend can still reach the target Miele API.
+- Check `docker compose logs -f backend` for any parsing errors if the `openapi.yaml` is modified.
+
+## 🔄 Updates
+
+To update the application:
 ```bash
-docker compose ps
+git pull origin main
+docker compose up -d --build
 ```
-
-The application should be accessible at:
-- **Frontend**: `http://<server-ip>`
-- **Backend API**: `http://<server-ip>:3000`
-
-## Container Management
-- **View Logs**: `docker compose logs -f`
-- **Restart Services**: `docker compose restart`
-- **Stop Application**: `docker compose down`

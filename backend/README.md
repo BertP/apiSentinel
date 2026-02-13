@@ -1,100 +1,55 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# API Sentinel - Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+The API Sentinel backend is built with **NestJS**, a progressive Node.js framework for building efficient, reliable, and scalable server-side applications.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🛠️ Architecture Highlights
 
-## Description
+- **Bull & Redis**: Asynchronous monitoring jobs with retry logic.
+- **TypeORM & PostgreSQL**: Persistent storage for monitoring and authentication logs.
+- **Server-Sent Events (SSE)**: Real-time event streaming to the frontend.
+- **OpenAPI Integration**: Dynamic endpoint discovery from a YAML spec.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## ⚙️ Configuration
 
-## Project setup
+The backend is configured via environment variables. See the root `.env.example` for details.
 
-```bash
-$ npm install
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | The port the API listens on | `3000` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:postgres@localhost:5432/api_sentinel` |
+| `REDIS_HOST` | Redis server hostname | `localhost` |
+| `MONITOR_INTERVAL_MS` | Default interval for monitoring tasks | `60000` (1 min) |
+| `OAUTH2_*` | Credentials for the Miele API | |
 
-## Compile and run the project
+## 🚀 Running Locally
 
-```bash
-# development
-$ npm run start
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-# watch mode
-$ npm run start:dev
+2. **Run in development mode**:
+   ```bash
+   npm run start:dev
+   ```
 
-# production mode
-$ npm run start:prod
-```
+3. **Access API Docs**:
+   Once running, visit `http://localhost:3000/docs` to see the Swagger UI.
 
-## Run tests
+## 🧪 Testing
 
 ```bash
-# unit tests
-$ npm run test
+# Unit tests
+npm run test
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Integration (e2e) tests
+npm run test:e2e
 ```
 
-## Deployment
+## 🏗️ Docker Build
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+The backend includes a multi-stage `Dockerfile` that builds the application and provides a lightweight production image.
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker build -t api-sentinel-backend .
 ```
-
-With Mau,- [x] Analyze project structure and documentation
-- [x] Search for keywords like TODO, FIXME, BUG in the codebase
-- [x] Check README files for pending tasks
-- [x] Review implementation against `MissionPromp.txt`
-    - [x] Frontend `App.tsx` reviewed
-    - [x] Backend services reviewed
-- [x] Compile a list of open issues and missing features
-- [x] Present findings to the user
-stJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
