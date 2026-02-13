@@ -59,6 +59,7 @@ apiMonitor/
 
 - [**Architecture Guide**](./ARCHITECTURE.md) - How the system components interact.
 - [**Deployment Guide**](./DEPLOYMENT.md) - Detailed instructions for production servers.
+- [**GitHub Config Guide**](./GITHUB.md) - CI/CD and repository standards.
 - [**Backend README**](./backend/README.md) - Information for backend developers.
 - [**Frontend README**](./frontend/README.md) - Information for frontend developers.
 
