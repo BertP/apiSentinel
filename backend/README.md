@@ -68,13 +68,15 @@ $ npm install -g @nestjs/mau
 $ mau deploy
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
+With Mau,- [x] Analyze project structure and documentation
+- [x] Search for keywords like TODO, FIXME, BUG in the codebase
+- [x] Check README files for pending tasks
+- [x] Review implementation against `MissionPromp.txt`
+    - [x] Frontend `App.tsx` reviewed
+    - [x] Backend services reviewed
+- [x] Compile a list of open issues and missing features
+- [x] Present findings to the user
+stJS Documentation](https://docs.nestjs.com) to learn more about the framework.
 - For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
 - To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
 - Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.

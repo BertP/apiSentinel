@@ -3,6 +3,8 @@ import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
 import { ConfigService } from '@nestjs/config';
+import { MonitorConfigService } from './monitor-config.service';
+import * as path from 'path';
 
 @Injectable()
 export class TaskSchedulerService implements OnModuleInit {
@@ -12,17 +14,28 @@ export class TaskSchedulerService implements OnModuleInit {
         @InjectQueue('monitor') private readonly monitorQueue: Queue,
         private readonly openapiParser: OpenapiParserService,
         private readonly configService: ConfigService,
+        private readonly monitorConfig: MonitorConfigService,
     ) { }
 
     async onModuleInit() {
         this.logger.log('Initializing monitoring tasks...');
         await this.scheduleTasks();
+
+        // Listen for dynamic updates
+        this.monitorConfig.configUpdates$.subscribe(() => {
+            this.logger.log('Configuration changed, rescheduling tasks...');
+            this.scheduleTasks();
+        });
     }
 
     async scheduleTasks() {
         try {
-            const api = await this.openapiParser.parseDefinition('openapi.yaml');
-            const endpoints = this.openapiParser.extractEndpoints(api);
+            const specPath = path.join(process.cwd(), '..', 'openapi.yaml');
+            const api = await this.openapiParser.parseDefinition(specPath);
+            const allEndpoints = this.openapiParser.extractEndpoints(api);
+
+            const activePaths = this.monitorConfig.getConfig().activeEndpoints;
+            const endpoints = allEndpoints.filter(e => activePaths.includes(e.path));
             const interval = this.configService.get<number>('MONITOR_INTERVAL_MS') || 60000;
 
             this.logger.log(`Scheduling ${endpoints.length} endpoints with ${interval}ms interval`);

@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.0.0
 info:
   version: 1.1.0
   title: Miele 3rd Party API
@@ -85,15 +85,6 @@ info:
 
     The new Miele OAuth2 Provider supports the following endpoints and **should
     be used for your developments**.
-
-
-
-    - **Auth URL:** 
-    `https://auth.domestic.miele-iot.com/partner/realms/mcs/protocol/openid-connect/auth`
-
-    - **Token URL:**
-    `https://auth.domestic.miele-iot.com/partner/realms/mcs/protocol/openid-connect/token`
-
 
     **The legacy OAuth provider with the following endpoints is still active for
     now:**

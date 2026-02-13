@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2, Settings } from 'lucide-react';
 import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { DebugTerminal } from './components/DebugTerminal';
+import { ConfigPanel } from './components/ConfigPanel';
 
 const API_BASE = 'http://localhost:3000/monitor';
 
@@ -26,6 +28,7 @@ interface Log {
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [stats, setStats] = useState<Stat[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
 
@@ -86,6 +89,13 @@ function App() {
           >
             <List className="w-5 h-5" />
             <span className="font-medium">Logs</span>
+          </button>
+          <button
+            onClick={() => setIsConfigOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-all duration-200"
+          >
+            <Settings className="w-5 h-5" />
+            <span className="font-medium">Settings</span>
           </button>
           <a
             href="http://localhost:3000/docs"
@@ -234,6 +244,8 @@ function App() {
           </div>
         )}
       </main>
+      <DebugTerminal />
+      {isConfigOpen && <ConfigPanel onClose={() => setIsConfigOpen(false)} />}
     </div>
   );
 }

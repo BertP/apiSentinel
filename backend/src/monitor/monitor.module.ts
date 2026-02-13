@@ -9,6 +9,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { MonitorLog } from './entities/monitor-log.entity';
 import { MonitorProcessor } from './monitor.processor';
 import { TaskSchedulerService } from './task-scheduler.service';
+import { MonitorConfigService } from './monitor-config.service';
+import { MonitorController } from './monitor.controller';
 
 @Module({
   imports: [
@@ -19,12 +21,14 @@ import { TaskSchedulerService } from './task-scheduler.service';
     }),
     TypeOrmModule.forFeature([MonitorLog]),
   ],
+  controllers: [MonitorController],
   providers: [
     OpenapiParserService,
     MonitorEngineService,
     OauthManagerService,
     MonitorProcessor,
-    TaskSchedulerService
+    TaskSchedulerService,
+    MonitorConfigService
   ],
   exports: [OpenapiParserService, MonitorEngineService, OauthManagerService],
 })

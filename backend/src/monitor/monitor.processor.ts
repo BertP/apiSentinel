@@ -2,6 +2,7 @@ import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bull';
 import { MonitorEngineService } from './monitor-engine/monitor-engine.service';
+import { MonitorController } from './monitor.controller';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MonitorLog } from './entities/monitor-log.entity';
@@ -39,6 +40,7 @@ export class MonitorProcessor {
         });
 
         await this.logRepository.save(log);
+        MonitorController.pushLog(log);
 
         this.logger.log(`Job ${job.id} completed. Saved log entry.`);
     }

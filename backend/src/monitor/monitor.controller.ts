@@ -1,14 +1,40 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Sse, MessageEvent, Post, Body } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MonitorLog } from './entities/monitor-log.entity';
+import { Subject, Observable, map } from 'rxjs';
+import { MonitorConfigService } from './monitor-config.service';
+import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
+import { OauthManagerService } from './oauth-manager/oauth-manager.service';
+import * as path from 'path';
 
 @Controller('monitor')
 export class MonitorController {
+    private static readonly logSubject = new Subject<MonitorLog>();
+
     constructor(
         @InjectRepository(MonitorLog)
         private readonly logRepository: Repository<MonitorLog>,
+        private readonly configService: MonitorConfigService,
+        private readonly openapiParser: OpenapiParserService,
+        private readonly oauthManager: OauthManagerService,
     ) { }
+
+    static pushLog(log: MonitorLog) {
+        this.logSubject.next(log);
+    }
+
+    @Get('oauth-status')
+    getOAuthStatus() {
+        return this.oauthManager.getTokenStatus();
+    }
+
+    @Sse('events')
+    events(): Observable<MessageEvent> {
+        return MonitorController.logSubject.asObservable().pipe(
+            map((log) => ({ data: log } as MessageEvent)),
+        );
+    }
 
     @Get('logs')
     async getLogs(@Query('limit') limit = 100) {
@@ -46,5 +72,24 @@ export class MonitorController {
         });
 
         return Object.values(stats);
+    }
+
+    @Get('available-endpoints')
+    async getAvailableEndpoints() {
+        // Path to the master openapi.yaml in the root directory
+        const specPath = path.join(process.cwd(), '..', 'openapi.yaml');
+        const api = await this.openapiParser.parseDefinition(specPath);
+        return this.openapiParser.extractEndpoints(api);
+    }
+
+    @Get('config')
+    getConfig() {
+        return this.configService.getConfig();
+    }
+
+    @Post('config')
+    async updateConfig(@Body() config: { manualToken?: string; activeEndpoints: string[] }) {
+        this.configService.updateConfig(config);
+        return { success: true, config: this.configService.getConfig() };
     }
 }

@@ -20,7 +20,10 @@ export class MonitorEngineService {
             this.logger.log(`Checking endpoint: ${endpoint.method} ${url}`);
 
             const token = await this.oauthManager.getAccessToken();
-            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const headers = {
+                'User-Agent': 'apiMonitor/0.0.1',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            };
 
             const response = await firstValueFrom(
                 this.httpService.request({
@@ -45,8 +48,9 @@ export class MonitorEngineService {
             const endTime = Date.now();
             const latency = endTime - startTime;
             const status = error.response?.status || 500;
+            const errorData = error.response?.data ? JSON.stringify(error.response.data) : error.message;
 
-            this.logger.error(`Failed: ${status} - ${error.message}`);
+            this.logger.error(`Failed: ${status} - ${errorData}`);
 
             return {
                 status,
