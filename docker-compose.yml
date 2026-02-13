@@ -1,48 +1,67 @@
 services:
-  postgres:
+  db:
     image: postgres:15-alpine
-    container_name: api-sentinel-db
     restart: always
     environment:
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
       POSTGRES_DB: ${DB_NAME:-api_sentinel}
+      TZ: Europe/Berlin
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - monitor_net
 
   redis:
     image: redis:7-alpine
-    container_name: api-sentinel-redis
     restart: always
+    environment:
+      TZ: Europe/Berlin
     ports:
       - "6379:6379"
+    networks:
+      - monitor_net
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
-    container_name: api-sentinel-backend
     restart: always
-    depends_on:
-      - postgres
-      - redis
     environment:
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    ports:
-      - "3000:3000"
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - OAUTH2_CLIENT_ID=${OAUTH2_CLIENT_ID}
+      - OAUTH2_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET}
+      - OAUTH2_USERNAME=${OAUTH2_USERNAME}
+      - OAUTH2_PASSWORD=${OAUTH2_PASSWORD}
+      - OAUTH2_VG=${OAUTH2_VG}
+      - OAUTH2_TOKEN_URL=${OAUTH2_TOKEN_URL}
+      - OAUTH2_AUTH_URL=${OAUTH2_AUTH_URL}
+      - MONITOR_INTERVAL_MS=${MONITOR_INTERVAL_MS}
+      - TZ=Europe/Berlin
+    depends_on:
+      - db
+      - redis
+    networks:
+      - monitor_net
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    container_name: api-sentinel-frontend
-    restart: always
     ports:
       - "80:80"
+    environment:
+      - TZ=Europe/Berlin
+    depends_on:
+      - backend
+    networks:
+      - monitor_net
+
+networks:
+  monitor_net:
+    driver: bridge
 
 volumes:
   postgres_data:

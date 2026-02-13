@@ -131,8 +131,8 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                             </div>
                             {oauthStatus && (
                                 <div className="flex items-center gap-2">
-                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${oauthStatus.expiresIn > 60 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-500'}`}>
-                                        {Math.floor(oauthStatus.expiresIn / 60)}m {oauthStatus.expiresIn % 60}s remaining
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${oauthStatus.expiresIn > 300 ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-500'}`}>
+                                        Expires at: {new Date(oauthStatus.expiresAt).toLocaleString('de-DE', { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                     </span>
                                 </div>
                             )}
