@@ -10,8 +10,8 @@ The fastest way to get API Sentinel running is using Docker Compose.
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/BertP/apiSimulation.git
-   cd apiSimulation
+   git clone https://github.com/BertP/apiMonitor.git
+   cd apiMonitor
    ```
 
 2. **Configure your environment**:

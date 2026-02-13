@@ -13,7 +13,7 @@ This guide explains how to deploy the full **API Sentinel** stack to a productio
 ### 1. Clone & Configure
 
 ```bash
-git clone https://github.com/BertP/apiSimulation.git /opt/apiMonitor
+git clone https://github.com/BertP/apiMonitor.git /opt/apiMonitor
 cd /opt/apiMonitor
 cp .env.example .env
 nano .env # update your credentials!
