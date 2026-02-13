@@ -19,20 +19,23 @@ async function bootstrap() {
 
     if (fs.existsSync(yamlPath)) {
       const fileContent = fs.readFileSync(yamlPath, 'utf8');
-      const document = yaml.load(fileContent) as any;
-      SwaggerModule.setup('docs', app, document);
+      const document = yaml.load(fileContent) as Record<string, unknown>;
+      SwaggerModule.setup('docs', app, document as any);
       new Logger('Swagger').log('Swagger UI initialized at /docs');
     } else {
-      new Logger('Swagger').warn('openapi.yaml not found, skipping Swagger UI setup');
+      new Logger('Swagger').warn(
+        'openapi.yaml not found, skipping Swagger UI setup',
+      );
     }
-  } catch (err) {
-    new Logger('Swagger').error('Failed to initialize Swagger UI', err.stack);
+  } catch (err: unknown) {
+    const error = err as Error;
+    new Logger('Swagger').error('Failed to initialize Swagger UI', error.stack);
   }
 
   const port = process.env.PORT ?? 3000;
-  await app.listen(port);
+  void app.listen(port);
 
   const logger = new Logger('Bootstrap');
   logger.log(`Application is running on: http://localhost:${port}`);
 }
-bootstrap();
+void bootstrap();

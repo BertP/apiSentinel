@@ -1,7 +1,16 @@
-import { Controller, Get, Query, Sse, MessageEvent, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  Sse,
+  MessageEvent,
+  Post,
+  Body,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MonitorLog } from './entities/monitor-log.entity';
+import { AuthLog } from './entities/auth-log.entity';
 import { Subject, Observable, map } from 'rxjs';
 import { MonitorConfigService } from './monitor-config.service';
 import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
@@ -10,86 +19,118 @@ import * as path from 'path';
 
 @Controller('monitor')
 export class MonitorController {
-    private static readonly logSubject = new Subject<MonitorLog>();
+  private static readonly logSubject = new Subject<MonitorLog>();
 
-    constructor(
-        @InjectRepository(MonitorLog)
-        private readonly logRepository: Repository<MonitorLog>,
-        private readonly configService: MonitorConfigService,
-        private readonly openapiParser: OpenapiParserService,
-        private readonly oauthManager: OauthManagerService,
-    ) { }
+  constructor(
+    @InjectRepository(MonitorLog)
+    private readonly logRepository: Repository<MonitorLog>,
+    @InjectRepository(AuthLog)
+    private readonly authLogRepository: Repository<AuthLog>,
+    private readonly configService: MonitorConfigService,
+    private readonly openapiParser: OpenapiParserService,
+    private readonly oauthManager: OauthManagerService,
+  ) {}
 
-    static pushLog(log: MonitorLog) {
-        this.logSubject.next(log);
-    }
+  static pushLog(log: MonitorLog) {
+    this.logSubject.next(log);
+  }
 
-    @Get('oauth-status')
-    getOAuthStatus() {
-        return this.oauthManager.getTokenStatus();
-    }
+  @Get('oauth-status')
+  getOAuthStatus() {
+    return this.oauthManager.getTokenStatus();
+  }
 
-    @Sse('events')
-    events(): Observable<MessageEvent> {
-        return MonitorController.logSubject.asObservable().pipe(
-            map((log) => ({ data: log } as MessageEvent)),
-        );
-    }
+  @Post('test-auth')
+  async testAuth() {
+    const success = await this.oauthManager.testLogin();
+    return { success };
+  }
 
-    @Get('logs')
-    async getLogs(@Query('limit') limit = 100) {
-        return this.logRepository.find({
-            order: { timestamp: 'DESC' },
-            take: limit,
-        });
-    }
+  @Get('auth-stats')
+  async getAuthStats() {
+    const logs = await this.authLogRepository.find({
+      order: { timestamp: 'DESC' },
+      take: 50,
+    });
 
-    @Get('stats')
-    async getStats() {
-        const logs = await this.logRepository.find({
-            order: { timestamp: 'DESC' },
-            take: 1000,
-        });
+    const successCount = logs.filter((l) => l.success).length;
+    const totalCount = logs.length;
 
-        // Group by path and method for overview
-        const stats: Record<string, any> = {};
-        logs.forEach(log => {
-            const key = `${log.method} ${log.path}`;
-            if (!stats[key]) {
-                stats[key] = {
-                    path: log.path,
-                    method: log.method,
-                    count: 0,
-                    successCount: 0,
-                    avgLatency: 0,
-                    lastStatus: log.statusCode,
-                    lastTimestamp: log.timestamp,
-                };
-            }
-            stats[key].count++;
-            if (log.success) stats[key].successCount++;
-            stats[key].avgLatency = (stats[key].avgLatency * (stats[key].count - 1) + log.latency) / stats[key].count;
-        });
+    return {
+      history: logs,
+      stats: {
+        totalChecks: totalCount,
+        successRate: totalCount > 0 ? (successCount / totalCount) * 100 : 0,
+        lastCheck: logs[0] || null,
+      },
+    };
+  }
 
-        return Object.values(stats);
-    }
+  @Sse('events')
+  events(): Observable<MessageEvent> {
+    return MonitorController.logSubject
+      .asObservable()
+      .pipe(map((log) => ({ data: log }) as MessageEvent));
+  }
 
-    @Get('available-endpoints')
-    async getAvailableEndpoints() {
-        // Path to the master openapi.yaml in the root directory
-        const specPath = path.join(process.cwd(), '..', 'openapi.yaml');
-        const api = await this.openapiParser.parseDefinition(specPath);
-        return this.openapiParser.extractEndpoints(api);
-    }
+  @Get('logs')
+  async getLogs(@Query('limit') limit = 100) {
+    return this.logRepository.find({
+      order: { timestamp: 'DESC' },
+      take: limit,
+    });
+  }
 
-    @Get('config')
-    getConfig() {
-        return this.configService.getConfig();
-    }
+  @Get('stats')
+  async getStats() {
+    const logs = await this.logRepository.find({
+      order: { timestamp: 'DESC' },
+      take: 1000,
+    });
 
-    @Post('config')
-    async updateConfig(@Body() config: { manualToken?: string; activeEndpoints: string[] }) {
-        this.configService.updateConfig(config);
-        return { success: true, config: this.configService.getConfig() };
-    }
+    // Group by path and method for overview
+    const stats: Record<string, any> = {};
+    logs.forEach((log) => {
+      const key = `${log.method} ${log.path}`;
+      if (!stats[key]) {
+        stats[key] = {
+          path: log.path,
+          method: log.method,
+          count: 0,
+          successCount: 0,
+          avgLatency: 0,
+          lastStatus: log.statusCode,
+          lastTimestamp: log.timestamp,
+        };
+      }
+      stats[key].count++;
+      if (log.success) stats[key].successCount++;
+      stats[key].avgLatency =
+        (stats[key].avgLatency * (stats[key].count - 1) + log.latency) /
+        stats[key].count;
+    });
+
+    return Object.values(stats);
+  }
+
+  @Get('available-endpoints')
+  async getAvailableEndpoints() {
+    // Path to the master openapi.yaml in the root directory
+    const specPath = path.join(process.cwd(), '..', 'openapi.yaml');
+    const api = await this.openapiParser.parseDefinition(specPath);
+    return this.openapiParser.extractEndpoints(api);
+  }
+
+  @Get('config')
+  getConfig() {
+    return this.configService.getConfig();
+  }
+
+  @Post('config')
+  async updateConfig(
+    @Body() config: { manualToken?: string; activeEndpoints: string[] },
+  ) {
+    this.configService.updateConfig(config);
+    return { success: true, config: this.configService.getConfig() };
+  }
 }

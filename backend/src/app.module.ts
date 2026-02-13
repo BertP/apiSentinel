@@ -15,8 +15,10 @@ import { MonitorLog } from './monitor/entities/monitor-log.entity';
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
-        url: config.get('DATABASE_URL') || 'postgresql://postgres:postgres@localhost:5432/api_sentinel',
-        entities: [MonitorLog],
+        url:
+          config.get('DATABASE_URL') ||
+          'postgresql://postgres:postgres@localhost:5432/api_sentinel',
+        autoLoadEntities: true,
         synchronize: true,
       }),
     }),
@@ -35,4 +37,4 @@ import { MonitorLog } from './monitor/entities/monitor-log.entity';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

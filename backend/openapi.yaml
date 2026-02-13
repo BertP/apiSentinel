@@ -1,15 +1,3738 @@
 openapi: 3.0.0
 info:
-  title: Miele API Monitoring
-  version: 1.0.0
+  version: 1.1.0
+  title: Miele 3rd Party API
+  description: >
+
+    ## About this API
+
+
+    The **Miele 3rd Party API** lets you remotely access connected Miele home
+    appliances via the cloud.  
+
+    To use it, you’ll need:
+
+
+    - A valid Miele user account  
+
+    - Miele@home-enabled appliances linked to that account  
+
+
+    The API gives you access to appliance status and lets you trigger basic
+    actions.  
+
+    Note: Available features may vary depending on the appliance type and
+    generation.
+
+      Learn more about the Miele@home system [here](https://www.miele.com).
+
+    ---
+
+
+    ## Important Notes
+
+
+    ### New Generation Devices
+
+
+    Endpoints for the **new generation washers/dryers** and **vacuum cleaners**
+    are not yet fully available.  
+
+    They’re expected to be released in **Fall 2025**.
+
+
+    ---
+
+
+    ## Terms of Use
+
+
+    By using the API, you agree to the  **Miele 3rd Party API License and Terms
+    of Use**.
+
+
+    ---
+
+
+    ## Access & Authorization
+
+
+    ### Get Access
+
+
+    Generate your personal developer credentials here:  
+
+    [https://developer.miele.com](https://developer.miele.com/get-involved)
+
+        
+    ### Authorization Flow
+
+
+    The API uses **OAuth 2.0 Authorization Code Grant Flow**.  
+
+    For details, check out:
+
+
+    - [RFC 6749](https://www.rfc-editor.org/rfc/rfc6749.txt)  
+
+    - [OAuth.net](https://oauth.net/2/)
+
+
+
+    **Starting with API V1.1.0, Miele supports an additional OAuth2 Provider
+    that can be used to issue tokens with device-specific permissions.** 
+
+
+    The new Miele OAuth2 Provider supports the following endpoints and **should
+    be used for your developments**.
+
+    **The legacy OAuth provider with the following endpoints is still active for
+    now:**
+
+
+    - **Auth URL:**  `https://api.mcs3.miele.com/thirdparty/login`
+
+    - **Token URL:** `https://api.mcs3.miele.com/thirdparty/token`
+
+
+    However, it will be phased out in the future and **shouldn't be used for new
+    developments**. </br> Please adapt        your implementation for use of the
+    new OAuth provider in the near future.
+
+
+
+
+    ---
+
+
+    ## Feedback & Support
+
+
+    Miele does **not** offer individual support for custom API-based
+    development.  
+
+    However, we’d love to hear from you!
+
+
+    Send feedback, feature requests, or bug reports to:  
+
+    [developer@miele.com](mailto:developer@miele.com)
+  contact:
+    name: / Feedback / Bug report / Feature request
+    email: developer@miele.com
 servers:
   - url: https://api.mcs3.miele.com/v1
+    description: PROD-Environment (Live-API)
+tags:
+  - name: Ident + State
+    description: >-
+      Endpoints for uniquely identifying a device and retrieving its current
+      operational state.
+  - name: Information
+    description: >-
+      Endpoints for retrieving additional device data such as consumable levels
+      and error states.
+  - name: Actions
+    description: >-
+      Endpoints for controlling device features like power, lighting,
+      ventilation, and ambient light.
+  - name: Programs
+    description: Endpoints for selecting and starting device-specific programs.
+  - name: Rooms
+    description: >-
+      Endpoints for managing room maps and navigation for robotic vacuum
+      cleaners.
+  - name: Media
+    description: Endpoints for accessing media content such as camera images from devices.
+  - name: Eventing
+    description: Endpoints for receiving notifications about device status changes.
+  - name: Token handling
+    description: >-
+      Endpoints for managing access tokens, including refresh and logout
+      operations.
 paths:
   /devices:
     get:
       summary: Returns all information about all appliances linked to an user account
+      description: Returns all information about all appliances linked to an user account
+      operationId: getDevices
+      tags:
+        - Ident + State
+      parameters:
+        - $ref: '#/components/parameters/language'
       responses:
         '200':
-          description: Successful response
+          description: the complete list of appliances
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  deviceId:
+                    type: object
+                    properties:
+                      ident:
+                        $ref: '#/components/schemas/ident'
+                      state:
+                        $ref: '#/components/schemas/state'
+              examples:
+                all devices:
+                  $ref: '#/components/examples/devicesAll'
         '401':
-          description: Unauthorized
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+            - openid
+        - OAuth2_Legacy: []
+  /devices/fillingLevels:
+    get:
+      summary: >-
+        Returns information about the consumable levels of each device in the
+        account.
+      operationId: getFillingLevels
+      tags:
+        - Information
+      parameters:
+        - $ref: '#/components/parameters/language'
+      responses:
+        '200':
+          description: the complete list of appliances
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    deviceId:
+                      type: object
+                      properties:
+                        fillingLevels:
+                          $ref: '#/components/schemas/fillingLevels'
+              examples:
+                all devices:
+                  $ref: '#/components/examples/fillingLevelsAll'
+  /devices/{deviceId}/fillingLevels:
+    get:
+      summary: >-
+        Returns information about the consumable levels of each device in the
+        account.
+      operationId: getFillingLevelsById
+      tags:
+        - Information
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '200':
+          description: the complete list of appliances
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/fillingLevels'
+              examples:
+                Washing machine:
+                  $ref: '#/components/examples/fillingLevelsWashingMachine'
+                Dishwasher:
+                  $ref: '#/components/examples/fillingLevelsDishwasher'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+  /devices/{deviceId}/failureDetails:
+    get:
+      summary: >-
+        Returns information about the consumable levels of each device in the
+        account.
+      operationId: getfailureDetailsById
+      tags:
+        - Information
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '200':
+          description: the failure reported by the device
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/failureDetails'
+              examples:
+                Washing machine:
+                  $ref: '#/components/examples/failureDetails'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+  /short/devices:
+    get:
+      summary: the summary
+      description: >-
+        Returns a reduced information set about all appliances linked to an user
+        account, especially for lightweight clients
+      operationId: getShortDevices
+      tags:
+        - Ident + State
+      parameters:
+        - $ref: '#/components/parameters/language'
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json; charset=utf-8:
+              schema:
+                description: Array with shortened device information
+                type: array
+                items:
+                  type: object
+                  properties:
+                    fabNumber:
+                      description: the serial number of the device
+                      type: string
+                    state:
+                      description: >-
+                        the localized device state - refer status within the
+                        state object
+                      type: string
+                    type:
+                      description: >-
+                        the localized device type - refer type within the ident
+                        object
+                      type: string
+                    deviceName:
+                      description: >-
+                        the friendly name of the device - refer device name
+                        within the ident object
+                      type: string
+                    details:
+                      description: the url to the full information of an unique device
+                      type: string
+              examples:
+                all devices short:
+                  $ref: '#/components/examples/shortDevicesAll'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+  /devices/{deviceId}:
+    get:
+      summary: Returns all information about a single device
+      operationId: getDeviceById
+      tags:
+        - Ident + State
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+        - $ref: '#/components/parameters/language'
+      responses:
+        '200':
+          description: the complete list of appliances
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  ident:
+                    $ref: '#/components/schemas/ident'
+                  state:
+                    $ref: '#/components/schemas/state'
+              examples:
+                Oven:
+                  $ref: '#/components/examples/devicesOven'
+                Dishwasher:
+                  $ref: '#/components/examples/devicesDishwasher'
+                Washing machine:
+                  $ref: '#/components/examples/devicesWashingmachine'
+                Refrigerator:
+                  $ref: '#/components/examples/devicesRefrigerator'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/500'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+  /devices/{deviceId}/ident:
+    get:
+      summary: Returns the ident information of a single device
+      operationId: getIdentById
+      tags:
+        - Ident + State
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+        - $ref: '#/components/parameters/language'
+      responses:
+        '200':
+          description: the Ident object
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/ident'
+              examples:
+                Oven:
+                  $ref: '#/components/examples/identOven'
+                Dishwasher:
+                  $ref: '#/components/examples/identDishwasher'
+                Washing machine:
+                  $ref: '#/components/examples/identWashingmachine'
+                Refrigerator:
+                  $ref: '#/components/examples/identRefrigerator'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+  /devices/{deviceId}/state:
+    get:
+      summary: Returns the state information of a single device
+      operationId: getStateById
+      tags:
+        - Ident + State
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+        - $ref: '#/components/parameters/language'
+      responses:
+        '200':
+          description: the State object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/state'
+              examples:
+                Oven:
+                  $ref: '#/components/examples/stateOven'
+                Dishwasher:
+                  $ref: '#/components/examples/stateDishwasher'
+                Washing machine:
+                  $ref: '#/components/examples/stateWashingmachine'
+                Refrigerator:
+                  $ref: '#/components/examples/stateRefrigerator'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+  /devices/{deviceId}/camera:
+    get:
+      summary: Returns the camera picture of a single device
+      operationId: getPictureById
+      tags:
+        - Media
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '200':
+          description: the picture of the device cam
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/camera'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+  /devices/{deviceId}/actions:
+    get:
+      summary: >-
+        Returns the current available actions, depending on the current state of
+        the device
+      operationId: getActionsById
+      tags:
+        - Actions
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '200':
+          description: List of the currently supported actions
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/actions'
+              examples:
+                Oven:
+                  $ref: '#/components/examples/actionsOven'
+                Dishwasher:
+                  $ref: '#/components/examples/actionsDishwasher'
+                Washing machine:
+                  $ref: '#/components/examples/actionsWashingmachine'
+                Refrigerator:
+                  $ref: '#/components/examples/actionsRefrigerator'
+                Hood with ambient light:
+                  $ref: '#/components/examples/actionsHood'
+                Robot vacuum cleaner:
+                  $ref: '#/components/examples/actionsRobot'
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+              examples:
+                capabilitiesTable:
+                  summary: An overview about the appliance capabilities
+                  externalValue: >-
+                    https://www.miele.com/developer/assets/API_V1.x.capabilities_by_device.pdf
+        '204':
+          $ref: '#/components/responses/204'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+    put:
+      summary: Invokes one of the current available action on a single device
+      operationId: putActionsById
+      tags:
+        - Actions
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ambientLight'
+                - $ref: '#/components/schemas/colors'
+                - $ref: '#/components/schemas/deviceName'
+                - $ref: '#/components/schemas/light'
+                - $ref: '#/components/schemas/modes'
+                - $ref: '#/components/schemas/powerOff'
+                - $ref: '#/components/schemas/powerOn'
+                - $ref: '#/components/schemas/processAction'
+                - $ref: '#/components/schemas/programId'
+                - $ref: '#/components/schemas/runOnTime'
+                - $ref: '#/components/schemas/startTime'
+                - $ref: '#/components/schemas/targetTemperature'
+                - $ref: '#/components/schemas/ventilationStep'
+                - $ref: '#/components/schemas/runOnTime'
+            examples:
+              ambientLight:
+                $ref: '#/components/examples/ambientLight'
+              colors by name:
+                $ref: '#/components/examples/colorsByName'
+              colors by rgb value:
+                $ref: '#/components/examples/colorsByRgbValue'
+              deviceName:
+                $ref: '#/components/examples/deviceName'
+              light:
+                $ref: '#/components/examples/light'
+              modes:
+                $ref: '#/components/examples/modes'
+              powerOff:
+                $ref: '#/components/examples/powerOff'
+              powerOn:
+                $ref: '#/components/examples/powerOn'
+              processAction:
+                $ref: '#/components/examples/processAction'
+              programId:
+                $ref: '#/components/examples/programId'
+              startTime:
+                $ref: '#/components/examples/startTime'
+              targetTemperature:
+                $ref: '#/components/examples/targetTemperature'
+              ventilationStep:
+                $ref: '#/components/examples/ventilationStep'
+              runOnTime:
+                $ref: '#/components/examples/runOnTime'
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_write
+        - OAuth2_Legacy: []
+  /devices/{deviceId}/programs:
+    get:
+      summary: Returns the current available programs of the device
+      operationId: getProgramsById
+      tags:
+        - Programs
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+        - $ref: '#/components/parameters/language'
+      responses:
+        '200':
+          description: List of the currently supported programs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/programs'
+              examples:
+                Oven:
+                  $ref: '#/components/examples/getProgramsOven'
+                Washing machine:
+                  $ref: '#/components/examples/getProgramsWashingMachine'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+    put:
+      summary: Select a program and start the appliance
+      description: >-
+        The appliance must be set manually to **'MobileStart'** or
+        **'MobileControl'** in advance
+      operationId: putProgramsById
+      tags:
+        - Programs
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                programId:
+                  type: integer
+                  description: the appliance specific program id
+                duration:
+                  type: array
+                  items:
+                    type: integer
+                    maxItems: 2
+                    minItems: 2
+                  description: the desired runtime of the program
+                temperature:
+                  type: integer
+                  description: the desired temperature of the program
+            examples:
+              Oven:
+                $ref: '#/components/examples/putProgramsOven'
+              Oven - default temperature:
+                $ref: '#/components/examples/putProgramsOvenDefaultTemperature'
+              Washing machine:
+                $ref: '#/components/examples/putProgramsWashingMachine'
+              Dishwasher:
+                $ref: '#/components/examples/putProgramsDishwasher'
+              Coffee System:
+                $ref: '#/components/examples/putProgramsCoffeesystem'
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_write
+        - OAuth2_Legacy: []
+  /devices/{deviceId}/rooms:
+    get:
+      summary: Returns the current available rooms and maps of a robot vacuum cleaner
+      operationId: getRooms
+      tags:
+        - Rooms
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '200':
+          description: List of the currently available maps
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rooms'
+              examples:
+                One Map:
+                  $ref: '#/components/examples/getRoomsOneMap'
+                Two maps:
+                  $ref: '#/components/examples/getRoomsTwoMaps'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+    put:
+      summary: >-
+        Robot vacuum cleaner starts cleaning the room identified by mapId and
+        room number
+      operationId: putRooms
+      tags:
+        - Rooms
+      parameters:
+        - $ref: '#/components/parameters/deviceId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mapId:
+                  type: integer
+                roomId:
+                  type: integer
+            examples:
+              Clean Room 8 on Map 2:
+                $ref: '#/components/examples/putRooms'
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+        '405':
+          $ref: '#/components/responses/405'
+        '500':
+          $ref: '#/components/responses/500'
+        '503':
+          $ref: '#/components/responses/503'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_write
+        - OAuth2_Legacy: []
+  /devices/all/events:
+    get:
+      summary: Returns an event on any status change of one of the devices
+      description: Not working within the OpenAPI environment
+      operationId: getEventsAll
+      tags:
+        - Eventing
+      parameters:
+        - $ref: '#/components/parameters/Accept-Language'
+      responses:
+        '200':
+          $ref: '#/components/responses/401'
+        x-stream:
+          description: the complete list of appliances
+          content:
+            text/event-stream; charset=utf-8:
+              schema:
+                type: object
+                additionalProperties:
+                  description: the deviceId of the referred appliance [type=string]
+                  type: object
+                  properties:
+                    ident:
+                      $ref: '#/components/schemas/ident'
+                    state:
+                      $ref: '#/components/schemas/state'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+  /devices/{deviceId}/events:
+    get:
+      summary: Returns an event on a status change of a single device
+      description: Not working within the OpenAPI environment
+      operationId: getEventsById
+      tags:
+        - Eventing
+      parameters:
+        - $ref: '#/components/parameters/Accept-Language'
+        - $ref: '#/components/parameters/deviceId'
+      responses:
+        '200':
+          $ref: '#/components/responses/401'
+        x-stream:
+          description: the complete list of appliances
+          content:
+            text/event-stream; charset=utf-8:
+              schema:
+                type: object
+                additionalProperties:
+                  description: the deviceId of the referred appliance [type=string]
+                  type: object
+                  properties:
+                    ident:
+                      $ref: '#/components/schemas/ident'
+                    state:
+                      $ref: '#/components/schemas/state'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_read
+        - OAuth2_Legacy: []
+  /token:
+    post:
+      summary: Refresh the access_token
+      description: >-
+        For security reasons, an access_token is only valid for a certain time.
+        Before this time expires, a new access_token can be requested with the
+        refresh_token.the refresh_token procedure prevents the user from having
+        to log in again. expires_in specifies the validity period of the
+        access_token.
+      operationId: getRefreshToken
+      tags:
+        - Token handling
+      servers:
+        - url: https://api.mcs3.miele.com/thirdparty
+          description: Server for all kind of token operation
+      requestBody:
+        description: .
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/refreshToken'
+            examples:
+              refreshToken:
+                $ref: '#/components/examples/refreshToken'
+      responses:
+        '200':
+          description: the new access_token and the new refresh_token
+          content:
+            application/json;charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/accessToken'
+              examples:
+                accessToken:
+                  $ref: '#/components/examples/accessToken'
+        '401':
+          $ref: '#/components/responses/401'
+        '500':
+          $ref: '#/components/responses/500'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_write
+        - OAuth2_Legacy: []
+  /logout:
+    post:
+      summary: Invalidates the current access- and refresh token
+      operationId: logout
+      tags:
+        - Token handling
+      servers:
+        - url: https://api.mcs3.miele.com/thirdparty
+          description: Server for all kind of token operation
+      responses:
+        '204':
+          $ref: '#/components/responses/204'
+        '401':
+          $ref: '#/components/responses/401'
+      security:
+        - OAuth2Provider_with_Scopes:
+            - mcs_thirdparty_write
+        - OAuth2_Legacy: []
+components:
+  schemas:
+    ambientLight:
+      type: integer
+      description: >-
+        possible actions out of  </br>1 Enable  </br>2  Disable  </br>
+        availability depends on device and device status
+    accessToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+          description: the new access_token
+        refresh_token:
+          type: string
+          description: the new refresh_token
+        token_type:
+          type: string
+          description: the type of the token, always Bearer
+        expires_in:
+          type: integer
+          description: the expiration time in seconds
+    colors:
+      type: string
+      description: >-
+        change the ambient light color of a cooker hood.  </br>Blue </br>Red
+        </br>Yellow </br>Orange </br>Green </br>Pink </br>Violet </br>White
+        </br>Turquoise </br>Crimson </br>Salmon </br>Gold </br>Cyan Blue
+        </br>Sky Blue </br>Rose </br>Lavender"
+    deviceName:
+      description: set a personal device name
+    actions:
+      description: >-
+        the `actions` object contains all information about the available
+        control possibilities </br> an empty array or a boolean value false
+        means this control is not available
+      properties:
+        processAction:
+          description: >-
+            possible actions out of  </br>1 START   </br>2 STOP  </br>3 PAUSE 
+            </br>4 START SUPERFREEZING  </br>5 STOP SUPERFREEZING  </br>6 START
+            SUPERCOOLING  </br>7 STOP SUPERCOOLING  </br> availability depends
+            on device and device status
+          type: array
+          items:
+            type: integer
+        light:
+          description: >-
+            possible actions out of  </br>1 Enable  </br>2  Disable  </br>
+            availability depends on device and device status
+          type: array
+          items:
+            type: integer
+        ambientLight:
+          description: >-
+            possible actions out of  </br>1 Enable  </br>2  Disable  </br>
+            availability depends on device and device status
+          type: array
+          items:
+            type: integer
+        startTime:
+          type: array
+          items:
+            type: array
+            items:
+              type: integer
+        ventilationStep:
+          type: array
+          items:
+            type: integer
+        programId:
+          type: array
+          items:
+            type: integer
+        targetTemperature:
+          description: >-
+            set a targetTemperatur for 1..n caves of a cooling device </br>
+            cave: number of available caves 1..n </br> min:  mininum allowed
+            temperature </br> max:  maximum allowed temperature
+          type: object
+          properties:
+            zone:
+              type: integer
+            min:
+              type: integer
+            max:
+              type: integer
+        deviceName:
+          description: set a personal device name
+          type: boolean
+        powerOn:
+          description: >-
+            powerOn device from off state to on state </br> availability depends
+            on device and device status
+          type: boolean
+        powerOff:
+          description: >-
+            powerOff device from on state to off state </br> availability
+            depends on device and device status
+          type: boolean
+        colors:
+          description: >-
+            change the ambient light color of a cooker hood to a preset color.
+            </br>preset colors will be listed as follows: </br>Blue </br>Red
+            </br>Yellow </br>Orange </br>Green </br>Pink </br>Violet </br>White
+            </br>Turquoise </br>Crimson </br>Salmon </br>Gold </br>Cyan Blue
+            </br>Sky Blue </br>Rose </br>Lavender
+          type: array
+          items:
+            type: string
+        modes:
+          description: >-
+            switch device in  special operation modes </br> 0 Normal operation
+            mode </br> 1 Sabbath mode </br> 2 Party mode </br> 3 Holiday mode
+            </br>availability depends on the device type
+          type: array
+          items:
+            type: integer
+        runOnTime:
+          description: >-
+            set the run on time of a running hood. possible actions out of 
+            </br> 0  no run on time  </br> 5  5 minutes run on time  </br>15  15
+            minutes run on time  </br> availability depends on device and device
+            status
+          type: array
+          items:
+            type: integer
+    camera:
+      type: object
+      properties:
+        image:
+          type: string
+          description: Base64-encoded image data URI
+          example: data:image/gif;base64,/9j/4AAQSkZJRgABAgAAAQABAAD/2wBDA...
+    failureDetails:
+      description: >-
+        in case that the device is reporting an error, you can find the error
+        number and a message here.
+      properties:
+        message:
+          type: string
+          example: Error water inlet
+        errorNumber:
+          type: integer
+          example: 10
+    fillingLevels:
+      description: >-
+        The `fillingLevels` object contains all possible fill levels. The fill
+        levels supported by the device are represented by a number, while
+        unsupported fill levels are represented by a `null` value.
+      properties:
+        twinDosContainer1FillingLevel:
+          type: integer
+          nullable: true
+          example: null
+        twinDosContainer2FillingLevel:
+          type: integer
+          nullable: true
+          example: null
+        powerDiscFillingLevel:
+          type: number
+          format: float
+          nullable: true
+          example: 100
+        saltFillingLevel:
+          type: integer
+          nullable: true
+          example: 64
+        rinseAidFillingLevel:
+          type: integer
+          nullable: true
+          example: 69
+        coalFilterSaturation:
+          type: integer
+          nullable: true
+          example: null
+        fatFilterSaturation:
+          type: integer
+          nullable: true
+          example: null
+        descalingCounter:
+          type: integer
+          nullable: true
+          example: 0
+        degreasingCounter:
+          type: integer
+          nullable: true
+          example: null
+        milkCleaningCounter:
+          type: integer
+          nullable: true
+          example: null
+    ident:
+      description: >-
+        the `ident` object contains all the information needed to uniquely
+        identify a generic Miele@home device.
+      properties:
+        type:
+          type: object
+          properties:
+            key_localized:
+              type: string
+              description: the localized name of the key
+            value_raw:
+              type: integer
+              enum:
+                - 1
+                - 2
+                - 7
+                - 12
+                - 13
+                - 14
+                - 15
+                - 16
+                - 17
+                - 18
+                - 19
+                - 20
+                - 21
+                - 23
+                - 24
+                - 25
+                - 27
+                - 31
+                - 32
+                - 33
+                - 34
+                - 45
+                - 48
+                - 67
+                - 68
+                - 74
+              description: >-
+                1 = WASHING MACHINE  </br>2 = TUMBLE DRYER  </br>7 = DISHWASHER 
+                </br>12 = OVEN  </br>13 = OVEN MICROWAVE  </br>14 = HOB
+                HIGHLIGHT  </br>15 = STEAM OVEN  </br>16 = MICROWAVE  </br>17 =
+                COFFEE SYSTEM  </br>18 = HOOD  </br>19 = FRIDGE  </br>20 =
+                FREEZER  </br>21 = FRIDGE-/FREEZER COMBINATION  </br>23 = VACUUM
+                CLEANER, ROBOT VACUUM CLEANER  </br>24 = WASHER DRYER  </br>25 =
+                DISH WARMER  </br>27 = HOB INDUCTION  </br>31 = STEAM OVEN
+                COMBINATION  </br>32 = WINE CABINET  </br>33 = WINE CONDITIONING
+                UNIT  </br>34 = WINE STORAGE CONDITIONING UNIT  </br>45 = STEAM
+                OVEN MICROWAVE COMBINATION  </br>48 = VACUUM DRAWER  </br>67 =
+                DIALOG OVEN  </br>68 = WINE CABINET FREEZER COMBINATION  </br>74
+                = HOB WITH VAPOUR EXTRACTION</br>
+            value_localized:
+              type: string
+              description: the localized type of the device
+          description: the type of the device
+        deviceName:
+          description: the friendly name of the device
+          type: string
+        protocolVersion:
+          description: the supported protocol version
+          type: integer
+        deviceIdentLabel:
+          description: information regarding the device hardware
+          type: object
+          properties:
+            fabNumber:
+              description: the serial number of the device
+              type: string
+            fabIndex:
+              description: the fabrication index of the device
+              type: string
+            techType:
+              description: the technical type of the device
+              type: string
+            matNumber:
+              type: string
+              description: the material number of the device
+            swids:
+              description: list of all software IDs
+              type: array
+              items:
+                type: string
+        xkmIdentLabel:
+          description: information regarding the communication module
+          type: object
+          properties:
+            techType:
+              description: the technical type of the communication module
+              type: string
+            releaseVersion:
+              type: string
+              description: the release version of the communication module
+    light:
+      type: integer
+      description: >-
+        possible actions out of  </br>1 Enable  </br>2  Disable  </br>
+        availability depends on device and device status
+    modes:
+      type: integer
+      description: >-
+        switch device in  special operation modes </br> 0 Normal operation mode
+        </br> 1 Sabbath mode </br> 2 Party mode </br> 3 Holiday mode
+        </br>availability depends on the device type
+    powerOff:
+      type: boolean
+      description: >-
+        powerOff device from on state to off state </br> availability depends on
+        device and device status
+    powerOn:
+      type: boolean
+      description: >-
+        powerOn device from off state to on state </br> availability depends on
+        device and device status
+    processAction:
+      description: >-
+        possible actions out of  </br>1 START   </br>2 STOP  </br>3 PAUSE 
+        </br>4 START SUPERFREEZING  </br>5 STOP SUPERFREEZING  </br>6 START
+        SUPERCOOLING  </br>7 STOP SUPERCOOLING  </br> availability depends on
+        device and device status
+      type: integer
+    programId:
+      type: integer
+      description: select a program, availability depends on device and device status
+    programs:
+      description: the available programs of the appliance
+      type: array
+      items:
+        type: object
+        properties:
+          programId:
+            type: integer
+            description: the appliance specific program id
+          program:
+            type: string
+            description: the localized name of the program
+          parameters:
+            description: if the program offers additional parameters they are listed here
+            type: object
+            properties:
+              temperature:
+                description: temperature settings
+                type: object
+                properties:
+                  min:
+                    type: integer
+                    description: the lowest selectable temperature for this program
+                  max:
+                    type: integer
+                    description: >-
+                      the highest selectable available temperature for this
+                      program
+                  step:
+                    type: integer
+                    description: the step width for the temperature selection
+                  mandatory:
+                    type: boolean
+                    description: describes if the parameter is mandatory or not
+              duration:
+                description: >-
+                  duration settings</br>if the duration is given, the appliance
+                  starts automatically</br>if the duration is not given, the
+                  user has to start the appliance manually
+                type: object
+                properties:
+                  min:
+                    type: array
+                    items:
+                      type: integer
+                    minItems: 2
+                    maxItems: 2
+                    description: the minimal duration of a program given in hours,minutes
+                  max:
+                    type: array
+                    items:
+                      type: integer
+                    minItems: 2
+                    maxItems: 2
+                    description: the maximal duration of a program given in hours,minutes
+                  mandatory:
+                    type: boolean
+                    description: describes if the parameter is mandatory or not
+    refreshToken:
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: the clientId
+        client_secret:
+          type: string
+          description: the clientSecret
+        refresh_token:
+          type: string
+          description: the refresh_token received within the authorization process
+        grant_type:
+          type: string
+          description: fixed value refresh_token
+    rooms:
+      description: List of maps handled by the Robot vacuum cleaner
+      type: array
+      items:
+        type: object
+        properties:
+          mapId:
+            type: integer
+          rooms:
+            type: array
+            items:
+              type: object
+              properties:
+                name:
+                  type: string
+                roomId:
+                  type: integer
+    runOnTime:
+      description: >-
+        modify the start time relative from current time </br> e.g. start in 2
+        hours 45 minutes </br> availability depends on device and device status
+      type: array
+      items:
+        type: integer
+    startTime:
+      description: >-
+        modify the start time relative from current time </br> e.g. start in 2
+        hours 45 minutes </br> availability depends on device and device status
+      type: array
+      items:
+        type: integer
+    state:
+      description: >-
+        the `state` object contains all information to represent the current
+        state of generic Miele@home device.
+      properties:
+        ProgramID:
+          description: the `ProgramID` object describes the current program.
+          type: object
+          properties:
+            value_raw:
+              description: the raw value of the current program.
+              type: integer
+            value_localized:
+              description: the localized name of the current program.
+              type: string
+            key_localized:
+              description: the localized name of the key.
+              type: string
+        status:
+          description: the `status` object describes the current main device state.
+          type: object
+          properties:
+            value_raw:
+              type: integer
+              enum:
+                - 1
+                - 2
+                - 3
+                - 4
+                - 5
+                - 6
+                - 7
+                - 8
+                - 9
+                - 10
+                - 11
+                - 12
+                - 13
+                - 14
+                - 15
+                - 146
+                - 255
+              description: >-
+                1 = OFF  </br>2 = ON  </br>3 = PROGRAMMED  </br>4 = PROGRAMMED
+                WAITING TO START  </br>5 = RUNNING  </br>6 = PAUSE  </br>7 = END
+                PROGRAMMED  </br>8 = FAILURE  </br>9 = PROGRAMME INTERRUPTED 
+                </br>10 = IDLE  </br>11 = RINSE HOLD  </br>12 = SERVICE  </br>13
+                = SUPERFREEZING  </br>14 = SUPERCOOLING  </br>15 = SUPERHEATING 
+                </br>146 = SUPERCOOLING_SUPERFREEZING  </br>255 = NOT_CONNECTED 
+                </br>
+            value_localized:
+              description: the localized name of the main device state
+              type: string
+            key_localized:
+              description: the localized name of the key
+              type: string
+        programType:
+          description: >-
+            the `programType` object describes the type of the program that is
+            currently selected.
+          type: object
+          properties:
+            value_raw:
+              type: integer
+              enum:
+                - 0
+                - 1
+                - 2
+                - 3
+              description: >-
+                0 = Normal operation mode  </br>1 = Own program  </br>2 =
+                Automatic program  </br>3 = Cleaning-/Care program  </br>
+            value_localized:
+              description: the localized name of the current program type
+              type: string
+            key_localized:
+              description: the localized name of the key
+              type: string
+        programPhase:
+          description: the `programPhase` object describes the current program phase.
+          type: object
+          properties:
+            value_raw:
+              description: the raw value of the current program phase.
+              type: integer
+            value_localized:
+              description: the localized name of the current program phase
+              type: string
+            key_localized:
+              description: the localized name of the key
+              type: string
+        remainingTime:
+          description: >-
+            the `remainingTime` object is representing the relative remaining
+            time given in hours and minutes. the first value within the array
+            equals the hours and the second value equals the minutes.
+          type: array
+          items:
+            type: integer
+          minItems: 2
+          maxItems: 2
+        startTime:
+          description: >-
+            the `startTime` object is representing relative starting time given
+            in hours and minutes. the first value within the array equals the
+            hours and the second value equals the minutes.
+          type: array
+          items:
+            type: integer
+          minItems: 2
+          maxItems: 2
+        targetTemperature:
+          description: >-
+            the `targetTemperature` object contains information about one or
+            multiple target temperatures of the process. the different
+            temperatures are returned in an array that contains none or multiple
+            signed 16b Integer values. the number of temperatures is device
+            specific. </br> If a target temperature is not used/existing in the
+            current device state of all Devices, its corresponding value in the
+            TargetTemperature array is set to -32768.
+          type: array
+          items:
+            type: object
+            properties:
+              value_raw:
+                description: >-
+                  the raw value of the temperature, equals the temperature in
+                  degree Celsius multiplied with the factor 100.
+                type: integer
+              value_localized:
+                description: localized value of the temperature.
+                type: string
+              unit:
+                description: the measurement unit of the temperature value
+                type: string
+          minItems: 1
+          maxItems: 3
+        coreTargetTemperature:
+          description: >-
+            The `coreTargetTemperature` object represents the target core
+            temperature of a food when the core temperature sensor is used. The
+            `coreTargetTemperature` object will only be filled, if a core target
+            temperature value is set on the device.
+          type: array
+          items:
+            type: object
+            properties:
+              value_raw:
+                description: >-
+                  the raw value of the temperature, equals the temperature in
+                  degree Celsius multiplied with the factor 100.
+                type: integer
+              value_localized:
+                description: localized value of the temperature.
+                type: string
+              unit:
+                description: the measurement unit of the temperature value
+                type: string
+          maxItems: 1
+        temperature:
+          description: >-
+            The `temperature` object returns the values of up to three
+            temperatures of a device. If a device returns less or no temperature
+            values this will be indicated by the value -32768.
+          type: array
+          items:
+            type: object
+            properties:
+              value_raw:
+                description: >-
+                  the raw value of the temperature, equals the temperature in
+                  degree Celsius multiplied with the factor 100.
+                type: integer
+              value_localized:
+                description: localized value of the temperature.
+                type: string
+              unit:
+                description: the measurement unit of the temperature value
+                type: string
+          maxItems: 3
+        coreTemperature:
+          description: >-
+            The `coreTemperature` object represents the core temperature of a
+            food when the core temperature sensor is used. If the oven has not
+            yet determined a core temperature (may take up to several minutes)
+            this will be indicated by the value -32768. The `coretemperature`
+            object will only be filled, if a `coreTargetTemperature` value is
+            set on the device.
+          type: array
+          items:
+            type: object
+            properties:
+              value_raw:
+                description: >-
+                  the raw value of the temperature, equals the temperature in
+                  degree Celsius multiplied with the factor 100.
+                type: integer
+              value_localized:
+                description: localized value of the temperature.
+                type: string
+              unit:
+                description: the measurement unit of the temperature value
+                type: string
+          maxItems: 1
+        signalInfo:
+          description: >-
+            the `signalInfo` object indicates, if a notification is active for
+            this Device.
+          type: boolean
+        signalFailure:
+          description: >-
+            the `signalFailure` object indicates, if a failure is active for
+            this Device.
+          type: boolean
+        signalDoor:
+          description: >-
+            the `signalDoor` object indicates, if a door-open message is active
+            for this Device.
+          type: boolean
+        remoteEnable:
+          description: >-
+            Current status of household appliances correlated with remote
+            control
+          type: object
+          properties:
+            fullRemoteControl:
+              description: the device can be controlled from remote.
+              type: boolean
+            smartGrid:
+              description: the device is set to Smart Grid mode.
+              type: boolean
+            mobileStart:
+              description: the device supports the Mobile Start option.
+              type: boolean
+        light:
+          type: integer
+        elapsedTime:
+          description: >-
+            the `elapsedTime` object represents the elapsed time given in hours
+            and minutes since the start of a certain program. the first value
+            within the array equals the hours and the second value equals the
+            minutes.</br>Not all devices return an `elapsedTime`
+          type: array
+          items:
+            type: integer
+          minItems: 2
+          maxItems: 2
+        spinningSpeed:
+          description: >-
+            the `spinningSpeed` object represent the information about the
+            selected spinning speed of a washing machine or a washer dryer
+            combination.
+          type: object
+          properties:
+            unit:
+              description: the measurement unit of the spinning speed
+              type: string
+            value_raw:
+              description: the raw value of the spinning speed
+              type: integer
+            value_localized:
+              description: the localized value of the spinning speed
+              type: string
+            key_localized:
+              description: the localized name of the key
+              type: string
+        dryingStep:
+          description: >-
+            the `dryingStep` object represents the selected drying step of a
+            tumble dryer or a washer-dryer combination.
+          type: object
+          properties:
+            value_raw:
+              type: integer
+              description: >-
+                Value&nbsp;Enumeration</br>null&nbsp;&nbsp;No drying
+                step</br>0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Extra
+                dry</br>1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Normal
+                Plus</br>2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Normal</br>3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Slightly
+                Dry</br>4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hand iron level
+                1</br>5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Hand iron level
+                2</br>6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Machine iron</br>
+            value_localized:
+              type: string
+              description: the localized value of the key
+            key_localized:
+              type: string
+              description: the localized name of the key
+        ventilationStep:
+          description: >-
+            the `ventilationStep` object represents the selected ventilation
+            level of a hood.
+          type: object
+          properties:
+            value_raw:
+              type: integer
+              description: >-
+                Value&nbsp;Enumeration</br>0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;None
+                (off)</br>1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Step
+                1</br>2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Step
+                2</br>3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Step
+                3</br>4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Step 4</br>
+            value_localized:
+              type: string
+              description: the localized value of the key
+            key_localized:
+              type: string
+              description: the localized name of the key
+        plateStep:
+          description: >-
+            the `plateStep`object represents the selected cooking zone levels
+            for a hob.</br>the number of cooking zones corresponds to the number
+            of array members.
+          type: array
+          items:
+            type: object
+            properties:
+              value_raw:
+                type: integer
+                description: >-
+                  the raw value of the plate step of a cooking zone. the raw
+                  value is not necessarily the same as the localized value.
+              value_localized:
+                type: string
+                description: the localized value of the key
+              key_localized:
+                type: string
+                description: the localized description of the key
+        ecoFeedback:
+          description: >-
+            the `ecoFeedback` object returns the amount of water and energy used
+            by the current running program up to the present moment. Furthermore
+            it returns a forecast for water and energy consumption for a
+            selected program.
+          type: object
+          properties:
+            currentWaterConsumption:
+              type: object
+              properties:
+                unit:
+                  type: string
+                  description: the measurement unit
+                value:
+                  type: number
+                  description: the amount of water used
+            currentEnergyConsumption:
+              type: object
+              properties:
+                unit:
+                  type: string
+                  description: the measurement unit
+                value:
+                  type: number
+                  description: the amount of energy used
+            waterForecast:
+              type: number
+              description: the relative water usage for the selected program from 0 to 1
+            energyForecast:
+              type: number
+              description: the relative energy usage for the selected program from 0 to 1
+        batteryLevel:
+          description: >-
+            the `batteryLevel` object returns the charging level of a builtin
+            battery as a percentage value between 0 .. 100
+          type: integer
+    targetTemperature:
+      type: array
+      items:
+        type: object
+        properties:
+          zone:
+            type: integer
+          value:
+            type: integer
+    ventilationStep:
+      type: integer
+      description: >-
+        possible actions out of  </br>1 Step1  </br>2  Step2  </br>3 Step3 
+        </br>4  Step4  </br> **availability depends on device and device
+        status**
+  parameters:
+    language:
+      in: query
+      name: language
+      schema:
+        type: string
+        enum:
+          - da
+          - de
+          - en
+          - es
+          - fr
+          - it
+          - nb
+          - nl
+      required: false
+      description: >-
+        the supported languages for localized values. If the language parameter
+        is missing or invalid, you will receive the english localization.
+    Accept-Language:
+      in: header
+      name: Accept-Language
+      schema:
+        type: string
+        enum:
+          - da
+          - de
+          - en
+          - es
+          - fr
+          - it
+          - nb
+          - nl
+      required: false
+      description: >-
+        the supported languages for localized values. If the language parameter
+        is missing or invalid, you will receive the english localization.
+    deviceId:
+      in: path
+      name: deviceId
+      description: the deviceId of the device to request for
+      schema:
+        type: string
+      required: true
+  responses:
+    '204':
+      description: No content
+    '400':
+      description: Malformed request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+          example:
+            code: 400
+            message: Malformed request
+    '401':
+      description: Authorization failed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+          example:
+            code: 401
+            message: Unauthorized
+    '404':
+      description: Not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+            example:
+              code: 404
+              message: HTTP 404 Not found
+    '405':
+      description: Method not allowed
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+            example:
+              code: 405
+              message: HTTP 405 Method Not Allowed
+    '500':
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+              message:
+                type: string
+            example:
+              message: Internal Server Error
+    '503':
+      description: unavailable
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+            example:
+              code: 503
+              message: unavailable
+  examples:
+    fillingLevelsWashingMachine:
+      summary: Washing machine
+      value:
+        twinDosContainer1FillingLevel: 47
+        twinDosContainer2FillingLevel: 53
+        powerDiscFillingLevel: null
+        saltFillingLevel: null
+        rinseAidFillingLevel: null
+        coalFilterSaturation: null
+        fatFilterSaturation: null
+        descalingCounter: null
+        degreasingCounter: null
+        milkCleaningCounter: null
+    fillingLevelsDishwasher:
+      summary: Dishwasher
+      value:
+        twinDosContainer1FillingLevel: null
+        twinDosContainer2FillingLevel: null
+        powerDiscFillingLevel: 89
+        saltFillingLevel: 60
+        rinseAidFillingLevel: 50
+        coalFilterSaturation: null
+        fatFilterSaturation: null
+        descalingCounter: null
+        degreasingCounter: null
+        milkCleaningCounter: null
+    failureDetails:
+      summary: Details an device
+      value:
+        - errorNumber: 10
+          message: Error water inlet
+    fillingLevelsAll:
+      summary: Example response
+      value:
+        - deviceId: '007109230215'
+          fillingLevels:
+            twinDosContainer1FillingLevel: 47
+            twinDosContainer2FillingLevel: 53
+            powerDiscFillingLevel: null
+            saltFillingLevel: null
+            rinseAidFillingLevel: null
+            coalFilterSaturation: null
+            fatFilterSaturation: null
+            descalingCounter: null
+            degreasingCounter: null
+            milkCleaningCounter: null
+        - deviceId: '007109230216'
+          fillingLevels:
+            twinDosContainer1FillingLevel: null
+            twinDosContainer2FillingLevel: null
+            powerDiscFillingLevel: 80.5
+            saltFillingLevel: 50
+            rinseAidFillingLevel: 60
+            coalFilterSaturation: null
+            fatFilterSaturation: null
+            descalingCounter: null
+            degreasingCounter: null
+            milkCleaningCounter: null
+        - deviceId: '007109230216'
+          fillingLevels:
+            twinDosContainer1FillingLevel: null
+            twinDosContainer2FillingLevel: null
+            powerDiscFillingLevel: null
+            saltFillingLevel: null
+            rinseAidFillingLevel: null
+            coalFilterSaturation: null
+            fatFilterSaturation: null
+            descalingCounter: null
+            degreasingCounter: null
+            milkCleaningCounter: null
+    accessToken:
+      value:
+        access_token: DE_f3a7a695c7948d4a8e6448417afb0167
+        refresh_token: DE_30c56d7f2736c1e0d38fb0a9c00098b4
+        token_type: Bearer
+        expires_in: 2592000
+    refreshToken:
+      value:
+        client_id: b492d7ef-5bf7-49d5-bfb9-e6a612abaa51
+        client_secret: NgxCwRdn0WiMNUGFhqh6hWqyewOAunoF
+        refresh_token: DE_e9f78bf151a05548eee5ceaf808ca526
+        grant_type: refresh_token
+    processAction:
+      description: Device will be started
+      value:
+        processAction: 1
+    light:
+      description: Light will be switched off
+      value:
+        light: 2
+    ambientLight:
+      description: Ambient light will be switched on
+      value:
+        ambientLight: 1
+    startTime:
+      description: Start time will be set to 2 hours 45 minutes from now
+      value:
+        startTime:
+          - 2
+          - 45
+    ventilationStep:
+      description: Ventilation will be set to level 3
+      value:
+        ventilationStep: 3
+    runOnTime:
+      description: runOnTime will be set to 5 minutes
+      value:
+        runOnTime: 5
+    programId:
+      description: Program with Id 4 will be selected
+      value:
+        programId: 4
+    targetTemperature:
+      description: Cooling zone 2 will be set to -20° C
+      value:
+        targetTemperature:
+          - zone: 2
+            value: -20
+    deviceName:
+      description: Device name will be set to 'My Device'
+      value:
+        deviceName: My Device
+    powerOff:
+      description: Device will be powered off
+      value:
+        powerOff: true
+    powerOn:
+      description: Device will be powered on
+      value:
+        powerOn: true
+    colorsByName:
+      description: Ambient light of a hood will be switched to blue
+      value:
+        colors: blue
+    colorsByRgbValue:
+      description: Ambient light of a hood will be switched to dark red
+      value:
+        colors: '#8B0000'
+    modes:
+      description: Sabbath mode will be activated
+      value:
+        modes: 1
+    shortDevicesAll:
+      value:
+        - fabNumber: '000137439624'
+          state: 'Off'
+          type: Oven
+          deviceName: ''
+          details: https://api.mcs3.miele.com/v1/devices/000137439624
+        - fabNumber: '000105666767'
+          state: In use
+          type: Dishwasher
+          deviceName: ''
+          details: https://api.mcs3.miele.com/v1/devices/000105666767
+        - fabNumber: '000148508574'
+          state: Waiting to start
+          type: Washing machine
+          deviceName: ''
+          details: https://api.mcs3.miele.com/v1/devices/000148508574
+        - fabNumber: '007109230215'
+          state: In use
+          type: Refrigerator
+          deviceName: ''
+          details: https://api.mcs3.miele.com/v1/devices/007109230215
+    devicesAll:
+      value:
+        '000137439624':
+          ident:
+            type:
+              key_localized: Device type
+              value_raw: 12
+              value_localized: Oven
+            deviceName: ''
+            protocolVersion: 4
+            deviceIdentLabel:
+              fabNumber: '000137439624'
+              fabIndex: '00'
+              techType: H7860BP
+              matNumber: '10552450'
+              swids:
+                - '5158'
+                - '5029'
+                - '25211'
+                - '25210'
+                - '4860'
+                - '25245'
+                - '5746'
+                - '5165'
+                - '25300'
+                - '25307'
+                - '25247'
+                - '20436'
+                - '25223'
+                - '5214'
+                - '20366'
+                - '20462'
+            xkmIdentLabel:
+              techType: EK037
+              releaseVersion: 03QC2
+          state:
+            ProgramID:
+              value_raw: 0
+              value_localized: ''
+              key_localized: Program name
+            status:
+              value_raw: 1
+              value_localized: 'Off'
+              key_localized: status
+            programType:
+              value_raw: 1
+              value_localized: Own programme
+              key_localized: Program type
+            programPhase:
+              value_raw: 0
+              value_localized: ''
+              key_localized: Program phase
+            remainingTime:
+              - 0
+              - 0
+            startTime:
+              - 0
+              - 0
+            targetTemperature:
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+            temperature:
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+            signalInfo: false
+            signalFailure: false
+            signalDoor: false
+            remoteEnable:
+              fullRemoteControl: true
+              smartGrid: false
+              mobileStart: true
+            ambientLight: null
+            light: 2
+            elapsedTime:
+              - 0
+              - 0
+            spinningSpeed:
+              unit: rpm
+              value_raw: null
+              value_localized: null
+              key_localized: Spin speed
+            dryingStep:
+              value_raw: null
+              value_localized: ''
+              key_localized: Drying level
+            ventilationStep:
+              value_raw: null
+              value_localized: ''
+              key_localized: Fan level
+            plateStep: []
+            ecoFeedback: null
+            batteryLevel: null
+        '000105666767':
+          ident:
+            type:
+              key_localized: Device type
+              value_raw: 7
+              value_localized: Dishwasher
+            deviceName: ''
+            protocolVersion: 4
+            deviceIdentLabel:
+              fabNumber: '000105666767'
+              fabIndex: '65'
+              techType: G7310
+              matNumber: '10992560'
+              swids:
+                - '5418'
+                - '20492'
+                - '25166'
+                - '25293'
+                - '25386'
+                - '4928'
+                - '20475'
+                - '25266'
+                - '4875'
+                - '20366'
+                - '20462'
+            xkmIdentLabel:
+              techType: EK057
+              releaseVersion: '08.15'
+          state:
+            ProgramID:
+              value_raw: 13
+              value_localized: QuickPowerWash
+              key_localized: Program name
+            status:
+              value_raw: 5
+              value_localized: In use
+              key_localized: status
+            programType:
+              value_raw: 0
+              value_localized: Program
+              key_localized: Program type
+            programPhase:
+              value_raw: 1795
+              value_localized: Main wash
+              key_localized: Program phase
+            remainingTime:
+              - 0
+              - 54
+            startTime:
+              - 0
+              - 0
+            targetTemperature:
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+            temperature:
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+            signalInfo: false
+            signalFailure: false
+            signalDoor: false
+            remoteEnable:
+              fullRemoteControl: true
+              smartGrid: false
+              mobileStart: true
+            ambientLight: null
+            light: null
+            elapsedTime:
+              - 0
+              - 28
+            spinningSpeed:
+              unit: rpm
+              value_raw: null
+              value_localized: null
+              key_localized: Spin speed
+            dryingStep:
+              value_raw: null
+              value_localized: ''
+              key_localized: Drying level
+            ventilationStep:
+              value_raw: null
+              value_localized: ''
+              key_localized: Fan level
+            plateStep: []
+            ecoFeedback:
+              currentWaterConsumption:
+                unit: l
+                value: 1
+              currentEnergyConsumption:
+                unit: kWh
+                value: 0.7
+              waterForecast: 0.4
+              energyForecast: 0.65
+            batteryLevel: null
+        '000148508574':
+          ident:
+            type:
+              key_localized: Device type
+              value_raw: 1
+              value_localized: Washing machine
+            deviceName: ''
+            protocolVersion: 4
+            deviceIdentLabel:
+              fabNumber: '000148508574'
+              fabIndex: '10'
+              techType: WWV980
+              matNumber: '10708820'
+              swids:
+                - '4850'
+                - '20457'
+                - '20449'
+                - '25260'
+                - '20450'
+                - '5012'
+                - '25314'
+                - '25205'
+                - '25313'
+                - '25191'
+            xkmIdentLabel:
+              techType: EK037
+              releaseVersion: 03QC2
+          state:
+            ProgramID:
+              value_raw: 1
+              value_localized: Cottons
+              key_localized: Program name
+            status:
+              value_raw: 4
+              value_localized: Waiting to start
+              key_localized: status
+            programType:
+              value_raw: 1
+              value_localized: Own programme
+              key_localized: Program type
+            programPhase:
+              value_raw: 256
+              value_localized: ''
+              key_localized: Program phase
+            remainingTime:
+              - 2
+              - 14
+            startTime:
+              - 1
+              - 34
+            targetTemperature:
+              - value_raw: 6000
+                value_localized: 60
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+            temperature:
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+            signalInfo: false
+            signalFailure: false
+            signalDoor: false
+            remoteEnable:
+              fullRemoteControl: true
+              smartGrid: true
+              mobileStart: false
+            ambientLight: null
+            light: null
+            elapsedTime:
+              - 0
+              - 0
+            spinningSpeed:
+              unit: rpm
+              value_raw: 1600
+              value_localized: '1600'
+              key_localized: Spin speed
+            dryingStep:
+              value_raw: null
+              value_localized: ''
+              key_localized: Drying level
+            ventilationStep:
+              value_raw: null
+              value_localized: ''
+              key_localized: Fan level
+            plateStep: []
+            ecoFeedback:
+              currentWaterConsumption:
+                unit: l
+                value: 0
+              currentEnergyConsumption:
+                unit: kWh
+                value: 0
+              waterForecast: 0.3
+              energyForecast: 0.4
+            batteryLevel: null
+        '007109230215':
+          ident:
+            type:
+              key_localized: Device type
+              value_raw: 19
+              value_localized: Refrigerator
+            deviceName: ''
+            protocolVersion: 1
+            deviceIdentLabel:
+              fabNumber: '007109230215'
+              fabIndex: '17'
+              techType: K 34483 iDF
+              matNumber: '09358070'
+              swids:
+                - '60684'
+                - '0'
+            xkmIdentLabel:
+              techType: EK044W
+              releaseVersion: 02Q73
+          state:
+            ProgramID:
+              value_raw: 0
+              value_localized: ''
+              key_localized: Program name
+            status:
+              value_raw: 5
+              value_localized: In use
+              key_localized: status
+            programType:
+              value_raw: 0
+              value_localized: Program
+              key_localized: Program type
+            programPhase:
+              value_raw: 0
+              value_localized: ''
+              key_localized: Program phase
+            remainingTime:
+              - 0
+              - 0
+            startTime:
+              - 0
+              - 0
+            targetTemperature:
+              - value_raw: 600
+                value_localized: 6
+                unit: Celsius
+            temperature:
+              - value_raw: 600
+                value_localized: 6
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+              - value_raw: -32768
+                value_localized: null
+                unit: Celsius
+            signalInfo: false
+            signalFailure: false
+            signalDoor: false
+            remoteEnable:
+              fullRemoteControl: true
+              smartGrid: false
+              mobileStart: false
+            ambientLight: null
+            light: null
+            elapsedTime: []
+            spinningSpeed:
+              unit: rpm
+              value_raw: null
+              value_localized: null
+              key_localized: Spin speed
+            dryingStep:
+              value_raw: null
+              value_localized: ''
+              key_localized: Drying level
+            ventilationStep:
+              value_raw: null
+              value_localized: ''
+              key_localized: Fan level
+            plateStep: []
+            ecoFeedback: null
+            batteryLevel: null
+    devicesOven:
+      value:
+        ident:
+          type:
+            key_localized: Device type
+            value_raw: 12
+            value_localized: Oven
+          deviceName: ''
+          protocolVersion: 4
+          deviceIdentLabel:
+            fabNumber: '000137439624'
+            fabIndex: '00'
+            techType: H7860BP
+            matNumber: '10552450'
+            swids:
+              - '5158'
+              - '5029'
+              - '25211'
+              - '25210'
+              - '4860'
+              - '25245'
+              - '5746'
+              - '5165'
+              - '25300'
+              - '25307'
+              - '25247'
+              - '20436'
+              - '25223'
+              - '5214'
+              - '20366'
+              - '20462'
+          xkmIdentLabel:
+            techType: EK037
+            releaseVersion: 03QC2
+        state:
+          ProgramID:
+            value_raw: 0
+            value_localized: ''
+            key_localized: Program name
+          status:
+            value_raw: 1
+            value_localized: 'Off'
+            key_localized: status
+          programType:
+            value_raw: 1
+            value_localized: Own programme
+            key_localized: Program type
+          programPhase:
+            value_raw: 0
+            value_localized: ''
+            key_localized: Program phase
+          remainingTime:
+            - 0
+            - 0
+          startTime:
+            - 0
+            - 0
+          targetTemperature:
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+          temperature:
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+          signalInfo: false
+          signalFailure: false
+          signalDoor: false
+          remoteEnable:
+            fullRemoteControl: true
+            smartGrid: false
+            mobileStart: true
+          ambientLight: null
+          light: 2
+          elapsedTime:
+            - 0
+            - 0
+          spinningSpeed:
+            unit: rpm
+            value_raw: null
+            value_localized: null
+            key_localized: Spin speed
+          dryingStep:
+            value_raw: null
+            value_localized: ''
+            key_localized: Drying level
+          ventilationStep:
+            value_raw: null
+            value_localized: ''
+            key_localized: Fan level
+          plateStep: []
+          ecoFeedback: null
+          batteryLevel: null
+    devicesDishwasher:
+      value:
+        ident:
+          type:
+            key_localized: Device type
+            value_raw: 7
+            value_localized: Dishwasher
+          deviceName: ''
+          protocolVersion: 4
+          deviceIdentLabel:
+            fabNumber: '000105666767'
+            fabIndex: '65'
+            techType: G7310
+            matNumber: '10992560'
+            swids:
+              - '5418'
+              - '20492'
+              - '25166'
+              - '25293'
+              - '25386'
+              - '4928'
+              - '20475'
+              - '25266'
+              - '4875'
+              - '20366'
+              - '20462'
+          xkmIdentLabel:
+            techType: EK057
+            releaseVersion: '08.15'
+        state:
+          ProgramID:
+            value_raw: 13
+            value_localized: QuickPowerWash
+            key_localized: Program name
+          status:
+            value_raw: 5
+            value_localized: In use
+            key_localized: status
+          programType:
+            value_raw: 0
+            value_localized: Program
+            key_localized: Program type
+          programPhase:
+            value_raw: 1795
+            value_localized: Main wash
+            key_localized: Program phase
+          remainingTime:
+            - 0
+            - 54
+          startTime:
+            - 0
+            - 0
+          targetTemperature:
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+          temperature:
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+          signalInfo: false
+          signalFailure: false
+          signalDoor: false
+          remoteEnable:
+            fullRemoteControl: true
+            smartGrid: false
+            mobileStart: true
+          ambientLight: null
+          light: null
+          elapsedTime:
+            - 0
+            - 28
+          spinningSpeed:
+            unit: rpm
+            value_raw: null
+            value_localized: null
+            key_localized: Spin speed
+          dryingStep:
+            value_raw: null
+            value_localized: ''
+            key_localized: Drying level
+          ventilationStep:
+            value_raw: null
+            value_localized: ''
+            key_localized: Fan level
+          plateStep: []
+          ecoFeedback:
+            currentWaterConsumption:
+              unit: l
+              value: 1
+            currentEnergyConsumption:
+              unit: kWh
+              value: 0.7
+            waterForecast: 0.4
+            energyForecast: 0.65
+          batteryLevel: null
+    devicesWashingmachine:
+      value:
+        ident:
+          type:
+            key_localized: Device type
+            value_raw: 1
+            value_localized: Washing machine
+          deviceName: ''
+          protocolVersion: 4
+          deviceIdentLabel:
+            fabNumber: '000148508574'
+            fabIndex: '10'
+            techType: WWV980
+            matNumber: '10708820'
+            swids:
+              - '4850'
+              - '20457'
+              - '20449'
+              - '25260'
+              - '20450'
+              - '5012'
+              - '25314'
+              - '25205'
+              - '25313'
+              - '25191'
+          xkmIdentLabel:
+            techType: EK037
+            releaseVersion: 03QC2
+        state:
+          ProgramID:
+            value_raw: 1
+            value_localized: Cottons
+            key_localized: Program name
+          status:
+            value_raw: 4
+            value_localized: Waiting to start
+            key_localized: status
+          programType:
+            value_raw: 1
+            value_localized: Own programme
+            key_localized: Program type
+          programPhase:
+            value_raw: 256
+            value_localized: ''
+            key_localized: Program phase
+          remainingTime:
+            - 2
+            - 14
+          startTime:
+            - 1
+            - 34
+          targetTemperature:
+            - value_raw: 6000
+              value_localized: 60
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+          temperature:
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+          signalInfo: false
+          signalFailure: false
+          signalDoor: false
+          remoteEnable:
+            fullRemoteControl: true
+            smartGrid: true
+            mobileStart: false
+          ambientLight: null
+          light: null
+          elapsedTime:
+            - 0
+            - 0
+          spinningSpeed:
+            unit: rpm
+            value_raw: 1600
+            value_localized: '1600'
+            key_localized: Spin speed
+          dryingStep:
+            value_raw: null
+            value_localized: ''
+            key_localized: Drying level
+          ventilationStep:
+            value_raw: null
+            value_localized: ''
+            key_localized: Fan level
+          plateStep: []
+          ecoFeedback:
+            currentWaterConsumption:
+              unit: l
+              value: 0
+            currentEnergyConsumption:
+              unit: kWh
+              value: 0
+            waterForecast: 0.3
+            energyForecast: 0.4
+          batteryLevel: null
+    devicesRefrigerator:
+      value:
+        ident:
+          type:
+            key_localized: Device type
+            value_raw: 19
+            value_localized: Refrigerator
+          deviceName: ''
+          protocolVersion: 1
+          deviceIdentLabel:
+            fabNumber: '007109230215'
+            fabIndex: '17'
+            techType: K 34483 iDF
+            matNumber: '09358070'
+            swids:
+              - '60684'
+              - '0'
+          xkmIdentLabel:
+            techType: EK044W
+            releaseVersion: 02Q73
+        state:
+          ProgramID:
+            value_raw: 0
+            value_localized: ''
+            key_localized: Program name
+          status:
+            value_raw: 5
+            value_localized: In use
+            key_localized: status
+          programType:
+            value_raw: 0
+            value_localized: Program
+            key_localized: Program type
+          programPhase:
+            value_raw: 0
+            value_localized: ''
+            key_localized: Program phase
+          remainingTime:
+            - 0
+            - 0
+          startTime:
+            - 0
+            - 0
+          targetTemperature:
+            - value_raw: 600
+              value_localized: 6
+              unit: Celsius
+          temperature:
+            - value_raw: 600
+              value_localized: 6
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+            - value_raw: -32768
+              value_localized: null
+              unit: Celsius
+          signalInfo: false
+          signalFailure: false
+          signalDoor: false
+          remoteEnable:
+            fullRemoteControl: true
+            smartGrid: false
+            mobileStart: false
+          ambientLight: null
+          light: null
+          elapsedTime: []
+          spinningSpeed:
+            unit: rpm
+            value_raw: null
+            value_localized: null
+            key_localized: Spin speed
+          dryingStep:
+            value_raw: null
+            value_localized: ''
+            key_localized: Drying level
+          ventilationStep:
+            value_raw: null
+            value_localized: ''
+            key_localized: Fan level
+          plateStep: []
+          ecoFeedback: null
+          batteryLevel: null
+    identOven:
+      value:
+        type:
+          key_localized: Device type
+          value_raw: 12
+          value_localized: Oven
+        deviceName: ''
+        protocolVersion: 4
+        deviceIdentLabel:
+          fabNumber: '000137439624'
+          fabIndex: '00'
+          techType: H7860BP
+          matNumber: '10552450'
+          swids:
+            - '5158'
+            - '5029'
+            - '25211'
+            - '25210'
+            - '4860'
+            - '25245'
+            - '5746'
+            - '5165'
+            - '25300'
+            - '25307'
+            - '25247'
+            - '20436'
+            - '25223'
+            - '5214'
+            - '20366'
+            - '20462'
+        xkmIdentLabel:
+          techType: EK037
+          releaseVersion: 03QC2
+    identDishwasher:
+      value:
+        type:
+          key_localized: Device type
+          value_raw: 7
+          value_localized: Dishwasher
+        deviceName: ''
+        protocolVersion: 4
+        deviceIdentLabel:
+          fabNumber: '000105666767'
+          fabIndex: '65'
+          techType: G7310
+          matNumber: '10992560'
+          swids:
+            - '5418'
+            - '20492'
+            - '25166'
+            - '25293'
+            - '25386'
+            - '4928'
+            - '20475'
+            - '25266'
+            - '4875'
+            - '20366'
+            - '20462'
+        xkmIdentLabel:
+          techType: EK057
+          releaseVersion: '08.15'
+    identWashingmachine:
+      value:
+        type:
+          key_localized: Device type
+          value_raw: 1
+          value_localized: Washing machine
+        deviceName: ''
+        protocolVersion: 4
+        deviceIdentLabel:
+          fabNumber: '000148508574'
+          fabIndex: '10'
+          techType: WWV980
+          matNumber: '10708820'
+          swids:
+            - '4850'
+            - '20457'
+            - '20449'
+            - '25260'
+            - '20450'
+            - '5012'
+            - '25314'
+            - '25205'
+            - '25313'
+            - '25191'
+        xkmIdentLabel:
+          techType: EK037
+          releaseVersion: 03QC2
+    identRefrigerator:
+      value:
+        type:
+          key_localized: Device type
+          value_raw: 19
+          value_localized: Refrigerator
+        deviceName: ''
+        protocolVersion: 1
+        deviceIdentLabel:
+          fabNumber: '007109230215'
+          fabIndex: '17'
+          techType: K 34483 iDF
+          matNumber: '09358070'
+          swids:
+            - '60684'
+            - '0'
+        xkmIdentLabel:
+          techType: EK044W
+          releaseVersion: 02Q73
+    stateOven:
+      value:
+        ProgramID:
+          value_raw: 0
+          value_localized: ''
+          key_localized: Program name
+        status:
+          value_raw: 1
+          value_localized: 'Off'
+          key_localized: status
+        programType:
+          value_raw: 1
+          value_localized: Own programme
+          key_localized: Program type
+        programPhase:
+          value_raw: 0
+          value_localized: ''
+          key_localized: Program phase
+        remainingTime:
+          - 0
+          - 0
+        startTime:
+          - 0
+          - 0
+        targetTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        coreTargetTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        temperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        coreTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        signalInfo: false
+        signalFailure: false
+        signalDoor: false
+        remoteEnable:
+          fullRemoteControl: true
+          smartGrid: false
+          mobileStart: true
+        ambientLight: null
+        light: 2
+        elapsedTime:
+          - 0
+          - 0
+        spinningSpeed:
+          unit: rpm
+          value_raw: null
+          value_localized: null
+          key_localized: Spin speed
+        dryingStep:
+          value_raw: null
+          value_localized: ''
+          key_localized: Drying level
+        ventilationStep:
+          value_raw: null
+          value_localized: ''
+          key_localized: Fan level
+        plateStep: []
+        ecoFeedback: null
+        batteryLevel: null
+    stateDishwasher:
+      value:
+        ProgramID:
+          value_raw: 13
+          value_localized: QuickPowerWash
+          key_localized: Program name
+        status:
+          value_raw: 5
+          value_localized: In use
+          key_localized: status
+        programType:
+          value_raw: 0
+          value_localized: Program
+          key_localized: Program type
+        programPhase:
+          value_raw: 1795
+          value_localized: Main wash
+          key_localized: Program phase
+        remainingTime:
+          - 0
+          - 54
+        startTime:
+          - 0
+          - 0
+        targetTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        coreTargetTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        temperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        coreTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        signalInfo: false
+        signalFailure: false
+        signalDoor: false
+        remoteEnable:
+          fullRemoteControl: true
+          smartGrid: false
+          mobileStart: true
+        ambientLight: null
+        light: null
+        elapsedTime:
+          - 0
+          - 28
+        spinningSpeed:
+          unit: rpm
+          value_raw: null
+          value_localized: null
+          key_localized: Spin speed
+        dryingStep:
+          value_raw: null
+          value_localized: ''
+          key_localized: Drying level
+        ventilationStep:
+          value_raw: null
+          value_localized: ''
+          key_localized: Fan level
+        plateStep: []
+        ecoFeedback:
+          currentWaterConsumption:
+            unit: l
+            value: 1
+          currentEnergyConsumption:
+            unit: kWh
+            value: 0.7
+          waterForecast: 0.4
+          energyForecast: 0.65
+        batteryLevel: null
+    stateWashingmachine:
+      value:
+        ProgramID:
+          value_raw: 1
+          value_localized: Cottons
+          key_localized: Program name
+        status:
+          value_raw: 4
+          value_localized: Waiting to start
+          key_localized: status
+        programType:
+          value_raw: 1
+          value_localized: Own programme
+          key_localized: Program type
+        programPhase:
+          value_raw: 256
+          value_localized: ''
+          key_localized: Program phase
+        remainingTime:
+          - 2
+          - 14
+        startTime:
+          - 1
+          - 34
+        targetTemperature:
+          - value_raw: 6000
+            value_localized: 60
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        coreTargetTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        temperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        coreTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        signalInfo: false
+        signalFailure: false
+        signalDoor: false
+        remoteEnable:
+          fullRemoteControl: true
+          smartGrid: true
+          mobileStart: false
+        ambientLight: null
+        light: null
+        elapsedTime:
+          - 0
+          - 0
+        spinningSpeed:
+          unit: rpm
+          value_raw: 1600
+          value_localized: '1600'
+          key_localized: Spin speed
+        dryingStep:
+          value_raw: null
+          value_localized: ''
+          key_localized: Drying level
+        ventilationStep:
+          value_raw: null
+          value_localized: ''
+          key_localized: Fan level
+        plateStep: []
+        ecoFeedback:
+          currentWaterConsumption:
+            unit: l
+            value: 0
+          currentEnergyConsumption:
+            unit: kWh
+            value: 0
+          waterForecast: 0.3
+          energyForecast: 0.4
+        batteryLevel: null
+    stateRefrigerator:
+      value:
+        ProgramID:
+          value_raw: 0
+          value_localized: ''
+          key_localized: Program name
+        status:
+          value_raw: 5
+          value_localized: In use
+          key_localized: status
+        programType:
+          value_raw: 0
+          value_localized: Program
+          key_localized: Program type
+        programPhase:
+          value_raw: 0
+          value_localized: ''
+          key_localized: Program phase
+        remainingTime:
+          - 0
+          - 0
+        startTime:
+          - 0
+          - 0
+        targetTemperature:
+          - value_raw: 600
+            value_localized: 6
+            unit: Celsius
+        coreTargetTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        temperature:
+          - value_raw: 600
+            value_localized: 6
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        coreTemperature:
+          - value_raw: -32768
+            value_localized: null
+            unit: Celsius
+        signalInfo: false
+        signalFailure: false
+        signalDoor: false
+        remoteEnable:
+          fullRemoteControl: true
+          smartGrid: false
+          mobileStart: false
+        ambientLight: null
+        light: null
+        elapsedTime: []
+        spinningSpeed:
+          unit: rpm
+          value_raw: null
+          value_localized: null
+          key_localized: Spin speed
+        dryingStep:
+          value_raw: null
+          value_localized: ''
+          key_localized: Drying level
+        ventilationStep:
+          value_raw: null
+          value_localized: ''
+          key_localized: Fan level
+        plateStep: []
+        ecoFeedback: null
+        batteryLevel: null
+    actionsHood:
+      value:
+        processAction: []
+        light:
+          - 1
+        ambientLight:
+          - 1
+        startTime: []
+        ventilationStep:
+          - 1
+          - 2
+          - 3
+          - 4
+        programId: []
+        targetTemperature: []
+        deviceName: false
+        powerOn: true
+        powerOff: false
+        colors:
+          - Blue
+          - Red
+          - Yellow
+          - Orange
+          - Green
+          - Pink
+          - Violet
+          - White
+          - Turquoise
+        modes: []
+        runOnTime: []
+    actionsOven:
+      value:
+        processAction: []
+        light:
+          - 1
+        ambientLight: []
+        startTime: []
+        ventilationStep: []
+        programId: []
+        targetTemperature: []
+        deviceName: false
+        powerOn: true
+        powerOff: false
+        colors: []
+        modes: []
+        runOnTime: []
+    actionsDishwasher:
+      value:
+        processAction:
+          - 2
+          - 3
+        light: []
+        ambientLight: []
+        startTime: []
+        ventilationStep: []
+        programId: []
+        targetTemperature: []
+        deviceName: true
+        powerOn: false
+        powerOff: true
+        colors: []
+        modes: []
+        runOnTime: []
+    actionsWashingmachine:
+      value:
+        processAction:
+          - 1
+          - 2
+          - 3
+        light: []
+        ambientLight: []
+        startTime: []
+        ventilationStep: []
+        programId: []
+        targetTemperature: []
+        deviceName: true
+        powerOn: false
+        powerOff: true
+        colors: []
+        modes: []
+        runOnTime: []
+    actionsRobot:
+      value:
+        processAction:
+          - 1
+        light: []
+        ambientLight: []
+        startTime: []
+        ventilationStep: []
+        programId:
+          - 1
+          - 2
+          - 3
+        targetTemperature: []
+        deviceName: true
+        powerOn: true
+        powerOff: false
+        colors: []
+        modes: []
+        runOnTime: []
+    actionsRefrigerator:
+      value:
+        processAction:
+          - 6
+        light: []
+        ambientLight: []
+        startTime: []
+        ventilationStep: []
+        programId: []
+        targetTemperature:
+          - zone: 1
+            min: 1
+            max: 9
+        deviceName: true
+        powerOn: false
+        powerOff: true
+        colors: []
+        modes: []
+        runOnTime: []
+    getProgramsWashingMachine:
+      value:
+        - programId: 1
+          program: Cottons
+          parameters: {}
+        - programId: 133
+          program: 'Cottons '
+          parameters: {}
+        - programId: 3
+          program: Minimum iron
+          parameters: {}
+        - programId: 4
+          program: Delicates
+          parameters: {}
+        - programId: 146
+          program: QuickPowerWash
+          parameters: {}
+        - programId: 31
+          program: Automatic plus
+          parameters: {}
+        - programId: 8
+          program: 'Woollens '
+          parameters: {}
+        - programId: 9
+          program: 'Silks '
+          parameters: {}
+        - programId: 122
+          program: Express 20
+          parameters: {}
+        - programId: 23
+          program: Shirts
+          parameters: {}
+        - programId: 24
+          program: Denim
+          parameters: {}
+        - programId: 50
+          program: Dark garments
+          parameters: {}
+        - programId: 29
+          program: Sportswear
+          parameters: {}
+        - programId: 77
+          program: Trainers
+          parameters: {}
+        - programId: 37
+          program: Outerwear
+          parameters: {}
+        - programId: 27
+          program: Proofing
+          parameters: {}
+        - programId: 129
+          program: Down filled items
+          parameters: {}
+        - programId: 95
+          program: Down duvets
+          parameters: {}
+        - programId: 39
+          program: Pillows
+          parameters: {}
+        - programId: 69
+          program: Cottons hygiene
+          parameters: {}
+        - programId: 22
+          program: Curtains
+          parameters: {}
+        - programId: 53
+          program: First wash
+          parameters: {}
+        - programId: 18
+          program: Separate rinse
+          parameters: {}
+        - programId: 17
+          program: Starch
+          parameters: {}
+        - programId: 76
+          program: Freshen up
+          parameters: {}
+        - programId: 75
+          program: Steam care
+          parameters: {}
+        - programId: 21
+          program: Drain / Spin
+          parameters: {}
+        - programId: 91
+          program: Clean machine
+          parameters: {}
+    getProgramsOven:
+      value:
+        - programId: 13
+          program: Fan plus
+          parameters:
+            temperature:
+              min: 30
+              max: 250
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 12
+                - 0
+              mandatory: true
+        - programId: 24
+          program: Conventional heat
+          parameters:
+            temperature:
+              min: 30
+              max: 280
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 12
+                - 0
+              mandatory: true
+        - programId: 14
+          program: Intensive bake
+          parameters:
+            temperature:
+              min: 50
+              max: 250
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 12
+                - 0
+              mandatory: true
+        - programId: 7
+          program: Auto roast
+          parameters:
+            temperature:
+              min: 100
+              max: 230
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 12
+                - 0
+              mandatory: true
+        - programId: 31
+          program: Bottom heat
+          parameters:
+            temperature:
+              min: 100
+              max: 280
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 12
+                - 0
+              mandatory: true
+        - programId: 25
+          program: Top heat
+          parameters:
+            temperature:
+              min: 100
+              max: 250
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 12
+                - 0
+              mandatory: true
+        - programId: 10
+          program: Full grill
+          parameters:
+            temperature:
+              min: 200
+              max: 300
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 6
+                - 0
+              mandatory: true
+        - programId: 11
+          program: Economy grill
+          parameters:
+            temperature:
+              min: 200
+              max: 300
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 6
+                - 0
+              mandatory: true
+        - programId: 29
+          program: Fan grill
+          parameters:
+            temperature:
+              min: 100
+              max: 260
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 6
+                - 0
+              mandatory: true
+        - programId: 6
+          program: Eco Fan heat
+          parameters:
+            temperature:
+              min: 100
+              max: 250
+              step: 5
+              mandatory: false
+            duration:
+              min:
+                - 0
+                - 1
+              max:
+                - 12
+                - 0
+              mandatory: true
+    putProgramsOven:
+      value:
+        programId: 24
+        duration:
+          - 1
+          - 15
+        temperature: 220
+      description: >-
+        Set and start the oven with operation mode Conventional heat, a duration
+        of 1 hour 15 minutes and a temperature of 220° Celsius
+    putProgramsOvenDefaultTemperature:
+      value:
+        programId: 13
+        duration:
+          - 0
+          - 45
+      description: >-
+        Set and start the oven with operation mode Fan plus, a duration of 0
+        hour 45 minutes and the default temperature
+    putProgramsWashingMachine:
+      value:
+        programId: 133
+      description: Set and start the Cottons program
+    putProgramsDishwasher:
+      value:
+        programId: 13
+      description: Set and start the QuickPowerWash program
+    putProgramsCoffeesystem:
+      value:
+        programId: 24002
+      description: Start the preparation of a cup of coffee
+    getRoomsOneMap:
+      value:
+        - mapId: 1
+          rooms:
+            - name: Favorite area
+              roomId: 2
+            - name: Favorite area
+              roomId: 5
+            - name: Favorite area
+              roomId: 6
+    getRoomsTwoMaps:
+      value:
+        - mapId: 1
+          rooms:
+            - name: Favorite area area
+              roomId: 2
+            - name: Favorite area
+              roomId: 5
+            - name: Favorite area
+              roomId: 6
+        - mapId: 2
+          rooms:
+            - name: Bathroom
+              roomId: 2
+            - name: Hallway
+              roomId: 1
+            - name: Kitchen
+              roomId: 5
+            - name: LivingRoom
+              roomId: 8
+            - name: Entrance area
+              roomId: 12
+            - name: Bedroom
+              roomId: 4
+    putRooms:
+      value:
+        mapId: 2
+        roomId: 8
+  securitySchemes:
+    OAuth2Provider_with_Scopes:
+      description: >+
+
+
+        OAuth 2.0 authorization with Miele's identity provider. Use this for
+        applications that require user authorization to access third-party
+        device data and control.
+
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: >-
+            https://auth.domestic.miele-iot.com/partner/realms/mcs/protocol/openid-connect/auth
+          tokenUrl: >-
+            https://auth.domestic.miele-iot.com/partner/realms/mcs/protocol/openid-connect/token
+          scopes:
+            mcs_thirdparty_read: read device information and status
+            mcs_thirdparty_write: modify your devices and execute actions
+            mcs_thirdparty_media: read device media information
+            openid: this scope must always be requested
+    OAuth2_Legacy:
+      description: >+
+
+
+        Please note: This OAuth2 provider will be deactivated during 2026.
+        Please use the new OAuth2 provider with scopes instead.
+
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.mcs3.miele.com/thirdparty/login
+          tokenUrl: https://api.mcs3.miele.com/thirdparty/token
+          scopes: {}
+    BearerAuth:
+      description: >-
+        If you have a valid access_token, you can authenticate yourself with
+        this token here.
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - OAuth2Provider_with_Scopes:
+      - openid
+  - BearerAuth: []
+externalDocs: {}

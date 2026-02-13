@@ -4,6 +4,7 @@ import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2, Settings 
 import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { DebugTerminal } from './components/DebugTerminal';
 import { ConfigPanel } from './components/ConfigPanel';
+import { AuthHealthWidget } from './components/AuthHealthWidget';
 
 const API_BASE = 'http://localhost:3000/monitor';
 
@@ -124,6 +125,7 @@ function App() {
 
         {activeTab === 'dashboard' ? (
           <div className="space-y-8">
+            <AuthHealthWidget />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {stats.map((stat, i) => (
                 <div key={i} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-blue-500/50 transition-all duration-300 group shadow-xl">

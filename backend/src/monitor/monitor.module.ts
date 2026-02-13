@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MonitorLog } from './entities/monitor-log.entity';
+import { AuthLog } from './entities/auth-log.entity';
 import { MonitorProcessor } from './monitor.processor';
 import { TaskSchedulerService } from './task-scheduler.service';
 import { MonitorConfigService } from './monitor-config.service';
@@ -19,7 +20,7 @@ import { MonitorController } from './monitor.controller';
     BullModule.registerQueue({
       name: 'monitor',
     }),
-    TypeOrmModule.forFeature([MonitorLog]),
+    TypeOrmModule.forFeature([MonitorLog, AuthLog]),
   ],
   controllers: [MonitorController],
   providers: [
@@ -28,8 +29,8 @@ import { MonitorController } from './monitor.controller';
     OauthManagerService,
     MonitorProcessor,
     TaskSchedulerService,
-    MonitorConfigService
+    MonitorConfigService,
   ],
   exports: [OpenapiParserService, MonitorEngineService, OauthManagerService],
 })
-export class MonitorModule { }
+export class MonitorModule {}

@@ -7,41 +7,54 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MonitorLog } from './entities/monitor-log.entity';
 import { ConfigService } from '@nestjs/config';
+import { OauthManagerService } from './oauth-manager/oauth-manager.service';
 
 @Processor('monitor')
 export class MonitorProcessor {
-    private readonly logger = new Logger(MonitorProcessor.name);
+  private readonly logger = new Logger(MonitorProcessor.name);
 
-    constructor(
-        private readonly monitorEngine: MonitorEngineService,
-        private readonly configService: ConfigService,
-        @InjectRepository(MonitorLog)
-        private readonly logRepository: Repository<MonitorLog>,
-    ) { }
+  constructor(
+    private readonly monitorEngine: MonitorEngineService,
+    private readonly configService: ConfigService,
+    private readonly oauthManager: OauthManagerService,
+    @InjectRepository(MonitorLog)
+    private readonly logRepository: Repository<MonitorLog>,
+  ) {}
 
-    @Process('check')
-    async handleCheck(job: Job<any>) {
-        const { path, method } = job.data;
+  @Process('auth-check')
+  async handleAuthCheck(job: Job<any>) {
+    this.logger.log(`Processing ${job.name} job...`);
+    await this.oauthManager.testLogin();
+  }
 
-        // Priority: env variable > default
-        const baseUrl = this.configService.get<string>('API_BASE_URL') || 'https://api.mcs3.miele.com/v1';
+  @Process('check')
+  async handleCheck(job: Job<any>) {
+    const { path, method } = job.data;
 
-        this.logger.log(`Processing check for ${method} ${path} on ${baseUrl}`);
+    // Priority: env variable > default
+    const baseUrl =
+      this.configService.get<string>('API_BASE_URL') ||
+      'https://api.mcs3.miele.com/v1';
 
-        const result = await this.monitorEngine.checkEndpoint(baseUrl, { path, method });
+    this.logger.log(`Processing check for ${method} ${path} on ${baseUrl}`);
 
-        const log = this.logRepository.create({
-            path,
-            method,
-            statusCode: result.status,
-            latency: result.latency,
-            success: result.success,
-            error: result.error,
-        });
+    const result = await this.monitorEngine.checkEndpoint(baseUrl, {
+      path,
+      method,
+    });
 
-        await this.logRepository.save(log);
-        MonitorController.pushLog(log);
+    const log = this.logRepository.create({
+      path,
+      method,
+      statusCode: result.status,
+      latency: result.latency,
+      success: result.success,
+      error: result.error,
+    });
 
-        this.logger.log(`Job ${job.id} completed. Saved log entry.`);
-    }
+    await this.logRepository.save(log);
+    MonitorController.pushLog(log);
+
+    this.logger.log(`Job ${job.id} completed. Saved log entry.`);
+  }
 }

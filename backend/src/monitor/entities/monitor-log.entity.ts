@@ -1,28 +1,33 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class MonitorLog {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    path: string;
+  @Column()
+  path: string;
 
-    @Column()
-    method: string;
+  @Column()
+  method: string;
 
-    @Column()
-    statusCode: number;
+  @Column()
+  statusCode: number;
 
-    @Column()
-    latency: number;
+  @Column()
+  latency: number;
 
-    @Column({ default: true })
-    success: boolean;
+  @Column({ default: true })
+  success: boolean;
 
-    @Column({ type: 'text', nullable: true })
-    error: string;
+  @Column({ type: 'text', nullable: true })
+  error: string;
 
-    @CreateDateColumn()
-    timestamp: Date;
+  @CreateDateColumn()
+  timestamp: Date;
 }
