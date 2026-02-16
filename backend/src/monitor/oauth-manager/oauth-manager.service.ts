@@ -98,7 +98,7 @@ export class OauthManagerService {
         this.httpService.post(tokenUrl, params.toString(), {
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'apiMonitor/0.0.1',
+            'User-Agent': 'API-Sentinel/v0.0.1',
           },
         }),
       );

@@ -36,7 +36,7 @@ export class MonitorEngineService {
 
       const token = await this.oauthManager.getAccessToken();
       const headers = {
-        'User-Agent': 'apiMonitor/0.0.1',
+        'User-Agent': 'API-Sentinel/v0.0.1',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
 
