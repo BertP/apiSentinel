@@ -46,6 +46,8 @@ services:
       - redis
     networks:
       - monitor_net
+    volumes:
+      - ./openapi.yaml:/openapi.yaml
 
   frontend:
     build:
