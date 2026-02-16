@@ -5,6 +5,8 @@ import { OauthManagerService } from '../oauth-manager/oauth-manager.service';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
+import { MonitorConfigService } from '../monitor-config.service';
+
 @Injectable()
 export class MonitorEngineService {
   private readonly logger = new Logger(MonitorEngineService.name);
@@ -14,6 +16,7 @@ export class MonitorEngineService {
   constructor(
     private readonly httpService: HttpService,
     private readonly oauthManager: OauthManagerService,
+    private readonly configService: MonitorConfigService,
   ) {
     this.ajv = new Ajv({ allErrors: true, strict: false });
     addFormats(this.ajv);
@@ -28,7 +31,12 @@ export class MonitorEngineService {
     baseUrl: string,
     endpoint: { path: string; method: string },
   ) {
-    const url = `${baseUrl}${endpoint.path}`;
+    const config = this.configService.getConfig();
+    const deviceId = config.deviceId || 'TRIAL_DEVICE_ID';
+
+    // Replace {deviceId} parameter
+    const pathWithParams = endpoint.path.replace('{deviceId}', deviceId);
+    const url = `${baseUrl}${pathWithParams}`;
     const startTime = Date.now();
 
     try {
@@ -40,11 +48,19 @@ export class MonitorEngineService {
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       };
 
+      // Handle PUT body
+      let data: any = undefined;
+      if (endpoint.method.toUpperCase() === 'PUT') {
+        data = this.generateSampleBody(endpoint.path, endpoint.method);
+        this.logger.log(`Generated PUT body: ${JSON.stringify(data)}`);
+      }
+
       const response = await firstValueFrom(
         this.httpService.request({
           url,
           method: endpoint.method as any,
           headers,
+          data,
           timeout: 10000,
         }),
       );
@@ -134,6 +150,34 @@ export class MonitorEngineService {
     } catch (err) {
       this.logger.warn('Validation engine error', err);
       return { success: true, details: { error: err.message } };
+    }
+  }
+
+  private generateSampleBody(path: string, method: string): any {
+    if (!this.apiDefinition) return {};
+
+    try {
+      const pathItem = this.apiDefinition.paths[path];
+      if (!pathItem) return {};
+
+      const operation = pathItem[method.toLowerCase()];
+      if (!operation || !operation.requestBody) return {};
+
+      const content = operation.requestBody.content['application/json'];
+      if (!content) return {};
+
+      // Try to find an example
+      if (content.examples) {
+        const firstExample = Object.values(content.examples)[0] as any;
+        if (firstExample.value) return firstExample.value;
+      }
+
+      if (content.example) return content.example;
+
+      // Fallback to minimal object
+      return {};
+    } catch (err) {
+      return {};
     }
   }
 }

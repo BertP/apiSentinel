@@ -6,6 +6,7 @@ export interface MonitorConfiguration {
   activeEndpoints: string[];
   emailRecipients: string[];
   alertEndpoints: string[];
+  deviceId: string;
 }
 
 @Injectable()
@@ -15,6 +16,7 @@ export class MonitorConfigService {
     activeEndpoints: ['/devices'], // Default starting endpoint
     emailRecipients: [],
     alertEndpoints: [],
+    deviceId: '',
   };
 
   private configUpdateSubject = new Subject<MonitorConfiguration>();

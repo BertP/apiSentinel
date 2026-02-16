@@ -139,6 +139,7 @@ export class MonitorController {
       activeEndpoints: string[];
       emailRecipients: string[];
       alertEndpoints: string[];
+      deviceId: string;
     },
   ) {
     this.configService.updateConfig(config);

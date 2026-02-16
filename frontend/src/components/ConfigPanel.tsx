@@ -13,6 +13,7 @@ interface Config {
     activeEndpoints: string[];
     emailRecipients: string[];
     alertEndpoints: string[];
+    deviceId: string;
 }
 
 interface OAuthStatus {
@@ -25,7 +26,7 @@ interface OAuthStatus {
 
 export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [availableEndpoints, setAvailableEndpoints] = useState<Endpoint[]>([]);
-    const [config, setConfig] = useState<Config>({ activeEndpoints: [], emailRecipients: [], alertEndpoints: [] });
+    const [config, setConfig] = useState<Config>({ activeEndpoints: [], emailRecipients: [], alertEndpoints: [], deviceId: '' });
     const [oauthStatus, setOauthStatus] = useState<OAuthStatus | null>(null);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
@@ -209,6 +210,21 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                 )}
                             </div>
                         )}
+
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center gap-2">
+                                <Globe className="w-3 h-3" />
+                                Target Device ID (for parameterized endpoints)
+                            </label>
+                            <input
+                                type="text"
+                                value={config.deviceId || ''}
+                                onChange={(e) => setConfig({ ...config, deviceId: e.target.value })}
+                                placeholder="e.g. 000123456789"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-mono text-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 outline-none transition-all"
+                            />
+                            <p className="text-[10px] text-slate-500 italic">This ID will replace {'{deviceId}'} in any path containing that parameter.</p>
+                        </div>
 
                         <div className="space-y-2">
                             <label className="text-xs text-slate-500">Manual Access Token Override</label>
