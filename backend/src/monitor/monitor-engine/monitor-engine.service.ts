@@ -171,7 +171,7 @@ export class MonitorEngineService {
       // Try to find an example
       if (content.examples) {
         // Prioritize processAction if available
-        const priorityKeys = ['processAction', 'processaction'];
+        const priorityKeys = ['processAction', 'processaction', 'processAction', 'processaction'];
         for (const key of priorityKeys) {
           if (content.examples[key]) {
             const ex = content.examples[key] as any;

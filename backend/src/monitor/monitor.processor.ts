@@ -99,16 +99,16 @@ export class MonitorProcessor {
     // State Automation (Toggling) Logic
     const config = this.monitorConfig.getConfig();
     if (config.stateAutomationEnabled && path.includes('/actions') && method.toUpperCase() === 'GET' && result.success && result.data) {
-      const actions = result.data.processaction || [];
+      const actions = result.data.processAction || [];
       const deviceId = config.deviceId || 'TRIAL_DEVICE_ID';
       const actionsPath = `/devices/${deviceId}/actions`;
 
       if (actions.includes(4)) {
         this.logger.log(`State Automation: Triggering SUPERFREEZING (4) for ${deviceId}`);
-        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, { processaction: 4 });
+        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, { processAction: 4 });
       } else if (actions.includes(5)) {
         this.logger.log(`State Automation: Triggering RUNNING (5) for ${deviceId}`);
-        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, { processaction: 5 });
+        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, { processAction: 5 });
       }
     }
 

@@ -15,7 +15,9 @@ export interface MonitorConfiguration {
 @Injectable()
 export class MonitorConfigService {
   private readonly logger = new Logger(MonitorConfigService.name);
-  private readonly configPath = path.join(process.cwd(), 'config.json');
+  private readonly configPath = fs.existsSync('/app/config.json')
+    ? '/app/config.json'
+    : path.join(process.cwd(), 'config.json');
 
   private currentConfig: MonitorConfiguration = {
     activeEndpoints: ['/devices'], // Default starting endpoint

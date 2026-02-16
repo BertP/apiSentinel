@@ -20,21 +20,35 @@ export const DebugTerminal: React.FC<DebugTerminalProps> = ({ onLogClick }) => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [isOpen, setIsOpen] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isConnected, setIsConnected] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const eventSource = new EventSource('/monitor/events');
 
+        eventSource.onopen = () => {
+            console.log('SSE Connected');
+            setIsConnected(true);
+        };
+
         eventSource.onmessage = (event) => {
-            const newLog = JSON.parse(event.data);
-            setLogs((prev) => [...prev.slice(-99), newLog]);
+            try {
+                const newLog = JSON.parse(event.data);
+                setLogs((prev) => [...prev.slice(-99), newLog]);
+            } catch (e) {
+                console.error('Failed to parse SSE event:', e);
+            }
         };
 
         eventSource.onerror = (err) => {
             console.error('SSE Error:', err);
+            setIsConnected(false);
         };
 
-        return () => eventSource.close();
+        return () => {
+            eventSource.close();
+            setIsConnected(false);
+        };
     }, []);
 
     useEffect(() => {
@@ -63,8 +77,9 @@ export const DebugTerminal: React.FC<DebugTerminalProps> = ({ onLogClick }) => {
                 {/* Header */}
                 <div className="bg-slate-900/50 px-4 py-2 border-b border-slate-800 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-2">
-                        <TerminalIcon className="w-4 h-4 text-blue-400" />
+                        <TerminalIcon className={`w-4 h-4 ${isConnected ? 'text-blue-400' : 'text-slate-500'}`} />
                         <span className="text-xs font-bold uppercase tracking-wider text-slate-400 font-mono">Debug Console</span>
+                        <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
                     </div>
                     <div className="flex items-center gap-1">
                         <button
