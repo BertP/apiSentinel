@@ -6,7 +6,7 @@ import { DebugTerminal } from './components/DebugTerminal';
 import { ConfigPanel } from './components/ConfigPanel';
 import { AuthHealthWidget } from './components/AuthHealthWidget';
 
-const API_BASE = 'http://localhost:3000/monitor';
+const API_BASE = '/monitor';
 
 interface Stat {
   path: string;
@@ -100,7 +100,7 @@ function App() {
             <span className="font-medium">Settings</span>
           </button>
           <a
-            href="http://localhost:3000/docs"
+            href="/docs"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-all duration-200"

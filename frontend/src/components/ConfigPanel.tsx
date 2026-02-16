@@ -31,7 +31,7 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
     const fetchOAuthStatus = async () => {
         try {
-            const res = await axios.get('http://localhost:3000/monitor/oauth-status');
+            const res = await axios.get('/monitor/oauth-status');
             setOauthStatus(res.data);
         } catch (err) {
             console.error('Failed to fetch OAuth status:', err);
@@ -42,8 +42,8 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         const fetchData = async () => {
             try {
                 const [endpointsRes, configRes] = await Promise.all([
-                    axios.get('http://localhost:3000/monitor/available-endpoints'),
-                    axios.get('http://localhost:3000/monitor/config')
+                    axios.get('/monitor/available-endpoints'),
+                    axios.get('/monitor/config')
                 ]);
                 setAvailableEndpoints(endpointsRes.data);
                 setConfig(configRes.data);
@@ -83,7 +83,7 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await axios.post('http://localhost:3000/monitor/config', config);
+            await axios.post('/monitor/config', config);
             onClose();
         } catch (err) {
             console.error('Failed to save config:', err);

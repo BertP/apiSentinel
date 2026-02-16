@@ -18,7 +18,7 @@ export const DebugTerminal: React.FC = () => {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const eventSource = new EventSource('http://localhost:3000/monitor/events');
+        const eventSource = new EventSource('/monitor/events');
 
         eventSource.onmessage = (event) => {
             const newLog = JSON.parse(event.data);

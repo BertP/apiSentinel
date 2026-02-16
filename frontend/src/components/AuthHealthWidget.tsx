@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ShieldCheck, ShieldAlert, Clock, RefreshCw } from 'lucide-react';
 
-const API_BASE = 'http://localhost:3000/monitor';
+const API_BASE = '/monitor';
 
 export function AuthHealthWidget() {
     const [authStats, setAuthStats] = useState<any>(null);
