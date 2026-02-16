@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
+import { MonitorEngineService } from './monitor-engine/monitor-engine.service';
 import { ConfigService } from '@nestjs/config';
 import { MonitorConfigService } from './monitor-config.service';
 import * as path from 'path';
@@ -15,7 +16,8 @@ export class TaskSchedulerService implements OnModuleInit {
     private readonly openapiParser: OpenapiParserService,
     private readonly configService: ConfigService,
     private readonly monitorConfig: MonitorConfigService,
-  ) {}
+    private readonly monitorEngine: MonitorEngineService,
+  ) { }
 
   async onModuleInit() {
     this.logger.log('Initializing monitoring tasks...');
@@ -32,6 +34,7 @@ export class TaskSchedulerService implements OnModuleInit {
     try {
       const specPath = path.join(process.cwd(), '..', 'openapi.yaml');
       const api = await this.openapiParser.parseDefinition(specPath);
+      this.monitorEngine.setDefinition(api);
       const allEndpoints = this.openapiParser.extractEndpoints(api);
 
       const activePaths = this.monitorConfig.getConfig().activeEndpoints;

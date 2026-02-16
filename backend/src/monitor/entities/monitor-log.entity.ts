@@ -25,6 +25,12 @@ export class MonitorLog {
   @Column({ default: true })
   success: boolean;
 
+  @Column({ type: 'jsonb', nullable: true })
+  validationResult: any;
+
+  @Column({ type: 'text', nullable: true })
+  validationError: string;
+
   @Column({ type: 'text', nullable: true })
   error: string;
 

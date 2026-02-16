@@ -19,7 +19,7 @@ export class MonitorProcessor {
     private readonly oauthManager: OauthManagerService,
     @InjectRepository(MonitorLog)
     private readonly logRepository: Repository<MonitorLog>,
-  ) {}
+  ) { }
 
   @Process('auth-check')
   async handleAuthCheck(job: Job<any>) {
@@ -50,6 +50,8 @@ export class MonitorProcessor {
       latency: result.latency,
       success: result.success,
       error: result.error,
+      validationResult: (result as any).validationResult,
+      validationError: (result as any).validationError,
     });
 
     await this.logRepository.save(log);

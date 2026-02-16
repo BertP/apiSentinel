@@ -25,6 +25,7 @@ interface Log {
   statusCode: number;
   latency: number;
   success: boolean;
+  validationError?: string;
 }
 
 function App() {
@@ -212,6 +213,7 @@ function App() {
                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Timestamp</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Endpoint</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Status</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Validation</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Latency</th>
                   </tr>
                 </thead>
@@ -233,6 +235,17 @@ function App() {
                         <span className={`px-2 py-1 rounded text-xs font-bold ${log.success ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                           {log.statusCode}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {log.validationError ? (
+                          <div className="flex justify-center" title={log.validationError}>
+                            <AlertCircle className="w-4 h-4 text-amber-500" />
+                          </div>
+                        ) : (
+                          <div className="flex justify-center">
+                            <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <span className="text-sm text-slate-300 font-medium tabular-nums">{log.latency}</span>

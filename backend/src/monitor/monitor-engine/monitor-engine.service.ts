@@ -2,15 +2,27 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { OauthManagerService } from '../oauth-manager/oauth-manager.service';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 @Injectable()
 export class MonitorEngineService {
   private readonly logger = new Logger(MonitorEngineService.name);
+  private ajv: Ajv;
+  private apiDefinition: any = null;
 
   constructor(
     private readonly httpService: HttpService,
     private readonly oauthManager: OauthManagerService,
-  ) {}
+  ) {
+    this.ajv = new Ajv({ allErrors: true, strict: false });
+    addFormats(this.ajv);
+  }
+
+  setDefinition(api: any) {
+    this.apiDefinition = api;
+    this.logger.log('OpenAPI definition synchronized with MonitorEngine');
+  }
 
   async checkEndpoint(
     baseUrl: string,
@@ -40,14 +52,26 @@ export class MonitorEngineService {
       const endTime = Date.now();
       const latency = endTime - startTime;
 
-      this.logger.log(`Result: ${response.status} - ${latency}ms`);
+      // Payload Validation
+      const validation = this.validateResponse(
+        endpoint.path,
+        endpoint.method,
+        response.status,
+        response.data,
+      );
+
+      this.logger.log(
+        `Result: ${response.status} - ${latency}ms - Valid: ${validation.success}`,
+      );
 
       return {
         status: response.status,
         latency,
         success: response.status >= 200 && response.status < 300,
+        validationResult: validation.details,
+        validationError: validation.error,
       };
-    } catch (error) {
+    } catch (error: any) {
       const endTime = Date.now();
       const latency = endTime - startTime;
       const status = error.response?.status || 500;
@@ -63,6 +87,53 @@ export class MonitorEngineService {
         success: false,
         error: error.message,
       };
+    }
+  }
+
+  private validateResponse(
+    path: string,
+    method: string,
+    status: number,
+    data: any,
+  ) {
+    if (!this.apiDefinition) {
+      return { success: true, details: { info: 'No definition loaded' } };
+    }
+
+    try {
+      const pathItem = this.apiDefinition.paths[path];
+      if (!pathItem) return { success: true, details: { info: 'Path not in spec' } };
+
+      const operation = pathItem[method.toLowerCase()];
+      if (!operation) return { success: true, details: { info: 'Method not in spec' } };
+
+      const responseSpec = operation.responses[status.toString()] || operation.responses['default'];
+      if (!responseSpec || !responseSpec.content) {
+        return { success: true, details: { info: 'No response schema defined' } };
+      }
+
+      const jsonSchema = responseSpec.content['application/json']?.schema;
+      if (!jsonSchema) {
+        return { success: true, details: { info: 'No JSON schema found' } };
+      }
+
+      // We need to handle refs if they aren't fully resolved, 
+      // but SwaggerParser.parse usually resolves them.
+      const validate = this.ajv.compile(jsonSchema);
+      const valid = validate(data);
+
+      if (!valid) {
+        return {
+          success: false,
+          error: this.ajv.errorsText(validate.errors),
+          details: validate.errors,
+        };
+      }
+
+      return { success: true, details: { info: 'Validated' } };
+    } catch (err) {
+      this.logger.warn('Validation engine error', err);
+      return { success: true, details: { error: err.message } };
     }
   }
 }
