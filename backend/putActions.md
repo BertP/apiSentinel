@@ -34,7 +34,7 @@ Dieses Dokument beschreibt die drei States eines Devices sowie die jeweilige Log
 
 ### GET actions exampe 
 
-```
+```json
 {
     "processAction": [
         4,
@@ -69,11 +69,11 @@ Dieses Dokument beschreibt die drei States eines Devices sowie die jeweilige Log
 ```
 
 ### PUT actions exmaple - go to superfreezing from running
-```
+```json
 {
     "processAction": 4
 }
-
+```
 
 ---
 

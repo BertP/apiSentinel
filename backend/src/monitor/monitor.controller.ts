@@ -11,7 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MonitorLog } from './entities/monitor-log.entity';
 import { AuthLog } from './entities/auth-log.entity';
-import { Subject, Observable, map } from 'rxjs';
+import { Subject, ReplaySubject, Observable, map } from 'rxjs';
 import { MonitorConfigService } from './monitor-config.service';
 import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
 import { OauthManagerService } from './oauth-manager/oauth-manager.service';
@@ -22,7 +22,7 @@ import * as path from 'path';
 
 @Controller('monitor')
 export class MonitorController {
-  private static readonly logSubject = new Subject<MonitorLog>();
+  private static readonly logSubject = new ReplaySubject<MonitorLog>(10);
 
   constructor(
     @InjectRepository(MonitorLog)

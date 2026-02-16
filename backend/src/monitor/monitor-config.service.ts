@@ -42,8 +42,12 @@ export class MonitorConfigService {
 
   private loadConfig() {
     try {
-      if (fs.existsSync(this.configPath)) {
-        this.logger.log(`Found config file at ${this.configPath}. Reading...`);
+      this.logger.log(`Checking for config at: ${this.configPath}`);
+      const exists = fs.existsSync(this.configPath);
+      this.logger.log(`Config file exists? ${exists}`);
+
+      if (exists) {
+        this.logger.log(`Reading config file...`);
         const data = fs.readFileSync(this.configPath, 'utf8');
         if (data && data.trim()) {
           const parsed = JSON.parse(data);
