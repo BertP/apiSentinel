@@ -52,6 +52,7 @@ export class MonitorProcessor {
       error: result.error,
       validationResult: (result as any).validationResult,
       validationError: (result as any).validationError,
+      responseData: result.data,
     });
 
     await this.logRepository.save(log);

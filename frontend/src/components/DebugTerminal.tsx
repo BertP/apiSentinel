@@ -9,9 +9,14 @@ interface LogEntry {
     latency: number;
     success: boolean;
     error?: string;
+    responseData?: any;
 }
 
-export const DebugTerminal: React.FC = () => {
+interface DebugTerminalProps {
+    onLogClick?: (log: LogEntry) => void;
+}
+
+export const DebugTerminal: React.FC<DebugTerminalProps> = ({ onLogClick }) => {
     const [logs, setLogs] = useState<LogEntry[]>([]);
     const [isOpen, setIsOpen] = useState(true);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -97,7 +102,11 @@ export const DebugTerminal: React.FC = () => {
                         <div className="text-slate-600 italic">Waiting for incoming monitoring events...</div>
                     )}
                     {logs.map((log, i) => (
-                        <div key={i} className="flex gap-2 group border-l-2 border-transparent hover:border-blue-500/30 pl-2 -ml-2">
+                        <div
+                            key={i}
+                            onClick={() => onLogClick?.(log)}
+                            className="flex gap-2 group border-l-2 border-transparent hover:border-blue-500/30 pl-2 -ml-2 cursor-pointer hover:bg-white/5 active:bg-white/10 transition-colors"
+                        >
                             <span className="text-slate-600 whitespace-nowrap">
                                 [{new Date(log.timestamp).toLocaleTimeString([], { hour12: false })}]
                             </span>

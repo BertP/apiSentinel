@@ -34,6 +34,9 @@ export class MonitorLog {
   @Column({ type: 'text', nullable: true })
   error: string;
 
+  @Column({ type: 'jsonb', nullable: true })
+  responseData: any;
+
   @CreateDateColumn()
   timestamp: Date;
 }

@@ -5,6 +5,7 @@ import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { DebugTerminal } from './components/DebugTerminal';
 import { ConfigPanel } from './components/ConfigPanel';
 import { AuthHealthWidget } from './components/AuthHealthWidget';
+import { ResponseViewer } from './components/ResponseViewer';
 
 const API_BASE = '/monitor';
 
@@ -26,6 +27,7 @@ interface Log {
   latency: number;
   success: boolean;
   validationError?: string;
+  responseData?: any;
 }
 
 function App() {
@@ -33,6 +35,7 @@ function App() {
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [stats, setStats] = useState<Stat[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
+  const [selectedLog, setSelectedLog] = useState<Log | null>(null);
 
   const fetchData = async () => {
     try {
@@ -219,7 +222,11 @@ function App() {
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {logs.map((log, i) => (
-                    <tr key={i} className="hover:bg-slate-800/30 transition-colors group">
+                    <tr
+                      key={i}
+                      onClick={() => setSelectedLog(log)}
+                      className="hover:bg-slate-800/30 transition-colors group cursor-pointer"
+                    >
                       <td className="px-6 py-4 text-sm text-slate-400 tabular-nums">
                         {new Date(log.timestamp).toLocaleString()}
                       </td>
@@ -259,8 +266,15 @@ function App() {
           </div>
         )}
       </main>
-      <DebugTerminal />
+      <DebugTerminal onLogClick={(log) => setSelectedLog(log as any)} />
       {isConfigOpen && <ConfigPanel onClose={() => setIsConfigOpen(false)} />}
+      {selectedLog && (
+        <ResponseViewer
+          title={`${selectedLog.method} ${selectedLog.path}`}
+          data={selectedLog.responseData}
+          onClose={() => setSelectedLog(null)}
+        />
+      )}
     </div>
   );
 }
