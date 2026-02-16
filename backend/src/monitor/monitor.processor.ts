@@ -55,7 +55,13 @@ export class MonitorProcessor {
       responseData: result.data,
     });
 
-    await this.logRepository.save(log);
+    try {
+      this.logger.log(`Saving log entry for ${method} ${path}...`);
+      await this.logRepository.save(log);
+      this.logger.log(`Log entry saved (ID: ${log.id}).`);
+    } catch (dbErr) {
+      this.logger.error(`DATABASE SAVE FAILED: ${dbErr.message}`, dbErr.stack);
+    }
 
     // Alert Handling
     if (!result.success) {

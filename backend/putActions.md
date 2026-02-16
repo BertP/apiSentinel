@@ -32,6 +32,49 @@ Dieses Dokument beschreibt die drei States eines Devices sowie die jeweilige Log
     ```
   - State change → **5** (RUNNING)
 
+### GET actions exampe 
+
+```
+{
+    "processAction": [
+        4,
+        6
+    ],
+    "light": [],
+    "ambientLight": [],
+    "startTime": [],
+    "ventilationStep": [],
+    "programId": [],
+    "targetTemperature": [
+        {
+            "zone": 1,
+            "min": 1,
+            "max": 9
+        },
+        {
+            "zone": 2,
+            "min": -26,
+            "max": -16
+        }
+    ],
+    "deviceName": true,
+    "powerOn": false,
+    "powerOff": false,
+    "colors": [],
+    "modes": [
+        1
+    ],
+    "runOnTime": []
+}
+```
+
+### PUT actions exmaple - go to superfreezing from running
+```
+{
+    "processAction": 4
+}
+
+
 ---
 
 ## Mermaid State Machine
@@ -61,3 +104,4 @@ stateDiagram-v2
   note right of SUPERCOOLING
     status = 14
   end note
+

@@ -29,29 +29,53 @@ export class MonitorConfigService {
   public configUpdates$;
 
   constructor() {
+    this.logger.log(`MonitorConfigService initializing. CWD: ${process.cwd()}`);
+    this.logger.log(`Expected config path: ${this.configPath}`);
     this.loadConfig();
-    this.configUpdateSubject = new BehaviorSubject<MonitorConfiguration>(this.currentConfig);
+    this.configUpdateSubject = new BehaviorSubject<MonitorConfiguration>(
+      this.currentConfig,
+    );
     this.configUpdates$ = this.configUpdateSubject.asObservable();
   }
 
   private loadConfig() {
     try {
       if (fs.existsSync(this.configPath)) {
+        this.logger.log(`Found config file at ${this.configPath}. Reading...`);
         const data = fs.readFileSync(this.configPath, 'utf8');
-        this.currentConfig = { ...this.currentConfig, ...JSON.parse(data) };
-        this.logger.log(`Configuration loaded from ${this.configPath}`);
+        if (data && data.trim()) {
+          const parsed = JSON.parse(data);
+          if (parsed && typeof parsed === 'object') {
+            this.currentConfig = { ...this.currentConfig, ...parsed };
+            this.logger.log(
+              `Configuration merged. Active Endpoints: ${JSON.stringify(this.currentConfig.activeEndpoints)}`,
+            );
+          } else {
+            this.logger.warn('Config file contains invalid JSON object.');
+          }
+        } else {
+          this.logger.warn('Config file is empty.');
+        }
+      } else {
+        this.logger.warn(
+          `Config file NOT found at ${this.configPath}. Using defaults.`,
+        );
       }
     } catch (err) {
-      this.logger.error(`Failed to load config: ${err.message}`);
+      this.logger.error(`Failed to load config: ${err.message}`, err.stack);
     }
   }
 
   private saveConfig() {
     try {
-      fs.writeFileSync(this.configPath, JSON.stringify(this.currentConfig, null, 2));
-      this.logger.log(`Configuration saved to ${this.configPath}`);
+      this.logger.log(`Saving configuration to ${this.configPath}...`);
+      fs.writeFileSync(
+        this.configPath,
+        JSON.stringify(this.currentConfig, null, 2),
+      );
+      this.logger.log('Configuration saved successfully.');
     } catch (err) {
-      this.logger.error(`Failed to save config: ${err.message}`);
+      this.logger.error(`Failed to save config: ${err.message}`, err.stack);
     }
   }
 
