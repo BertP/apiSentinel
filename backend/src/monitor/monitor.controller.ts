@@ -15,6 +15,8 @@ import { Subject, Observable, map } from 'rxjs';
 import { MonitorConfigService } from './monitor-config.service';
 import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
 import { OauthManagerService } from './oauth-manager/oauth-manager.service';
+import { InjectQueue } from '@nestjs/bull';
+import type { Queue } from 'bull';
 import * as path from 'path';
 
 @Controller('monitor')
@@ -29,6 +31,7 @@ export class MonitorController {
     private readonly configService: MonitorConfigService,
     private readonly openapiParser: OpenapiParserService,
     private readonly oauthManager: OauthManagerService,
+    @InjectQueue('monitor') private readonly monitorQueue: Queue,
   ) { }
 
   static pushLog(log: MonitorLog) {
@@ -138,5 +141,11 @@ export class MonitorController {
   ) {
     this.configService.updateConfig(config);
     return { success: true, config: this.configService.getConfig() };
+  }
+
+  @Post('trigger-report')
+  async triggerReport() {
+    await this.monitorQueue.add('daily-report', {});
+    return { success: true, message: 'Statistics report queued' };
   }
 }

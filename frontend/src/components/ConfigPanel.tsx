@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, Search, Check, X, Shield, Globe, ShieldAlert } from 'lucide-react';
+import { Settings, Save, Search, Check, X, Shield, Globe, ShieldAlert, Mail } from 'lucide-react';
 import axios from 'axios';
 
 interface Endpoint {
@@ -30,6 +30,7 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [sendingReport, setSendingReport] = useState(false);
 
     const fetchOAuthStatus = async () => {
         try {
@@ -99,6 +100,19 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const handleEmailChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const emails = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
         setConfig(prev => ({ ...prev, emailRecipients: emails }));
+    };
+
+    const handleTriggerReport = async () => {
+        setSendingReport(true);
+        try {
+            await axios.post('/monitor/trigger-report');
+            alert('Statistics report email has been queued!');
+        } catch (err) {
+            console.error('Failed to trigger report:', err);
+            alert('Failed to send report. Check console for details.');
+        } finally {
+            setSendingReport(false);
+        }
     };
 
     const handleSave = async () => {
@@ -196,6 +210,21 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                 placeholder="admin@example.com, dev@example.com..."
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-mono text-slate-300 h-20 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 outline-none transition-all resize-none"
                             />
+                        </div>
+
+                        <div className="pt-2">
+                            <button
+                                onClick={handleTriggerReport}
+                                disabled={sendingReport || config.emailRecipients.length === 0}
+                                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-300 rounded-xl border border-slate-700 transition-all font-medium text-sm"
+                            >
+                                {sendingReport ? (
+                                    <div className="w-4 h-4 border-2 border-slate-400 border-t-slate-200 rounded-full animate-spin" />
+                                ) : (
+                                    <Mail className="w-4 h-4" />
+                                )}
+                                Send Statistics Mail Now
+                            </button>
                         </div>
                     </section>
 
