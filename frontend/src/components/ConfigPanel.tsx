@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, Search, Check, X, Shield, Globe, ShieldAlert, Mail } from 'lucide-react';
+import { Settings, Save, Search, Check, X, Shield, Globe, ShieldAlert, Mail, Activity, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
 
 interface Endpoint {
@@ -31,6 +31,7 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [sendingReport, setSendingReport] = useState(false);
+    const [verifyingSmtp, setVerifyingSmtp] = useState(false);
 
     const fetchOAuthStatus = async () => {
         try {
@@ -112,6 +113,23 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             alert('Failed to send report. Check console for details.');
         } finally {
             setSendingReport(false);
+        }
+    };
+
+    const handleVerifySmtp = async () => {
+        setVerifyingSmtp(true);
+        try {
+            const res = await axios.get('/monitor/verify-smtp');
+            if (res.data.success) {
+                alert('🚀 SMTP Connection Successful! Your email server is well configured.');
+            } else {
+                alert(`❌ SMTP Connection Failed: ${res.data.error}`);
+            }
+        } catch (err) {
+            console.error('Failed to verify SMTP:', err);
+            alert('Failed to connect to email server. Check console for logs.');
+        } finally {
+            setVerifyingSmtp(false);
         }
     };
 
@@ -212,7 +230,20 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                             />
                         </div>
 
-                        <div className="pt-2">
+                        <div className="pt-2 flex flex-col gap-2">
+                            <button
+                                onClick={handleVerifySmtp}
+                                disabled={verifyingSmtp}
+                                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-slate-950 hover:bg-slate-900 disabled:opacity-50 text-slate-400 rounded-xl border border-slate-800 transition-all font-medium text-sm"
+                            >
+                                {verifyingSmtp ? (
+                                    <div className="w-4 h-4 border-2 border-slate-600 border-t-slate-400 rounded-full animate-spin" />
+                                ) : (
+                                    <Activity className="w-4 h-4" />
+                                )}
+                                Test Email Connection
+                            </button>
+
                             <button
                                 onClick={handleTriggerReport}
                                 disabled={sendingReport || config.emailRecipients.length === 0}

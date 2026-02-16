@@ -4,35 +4,45 @@ import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class MailService {
-    private readonly logger = new Logger(MailService.name);
-    private transporter: nodemailer.Transporter;
+  private readonly logger = new Logger(MailService.name);
+  private transporter: nodemailer.Transporter;
 
-    constructor(private readonly configService: ConfigService) {
-        this.transporter = nodemailer.createTransport({
-            host: this.configService.get<string>('SMTP_HOST'),
-            port: Number(this.configService.get<number>('SMTP_PORT')) || 465,
-            secure: true, // true for 465, false for other ports
-            auth: {
-                user: this.configService.get<string>('SMTP_USER'),
-                pass: this.configService.get<string>('SMTP_PASS'),
-            },
-            tls: {
-                rejectUnauthorized: false, // Useful for certain hosting providers
-            },
-        });
+  constructor(private readonly configService: ConfigService) {
+    this.transporter = nodemailer.createTransport({
+      host: this.configService.get<string>('SMTP_HOST'),
+      port: Number(this.configService.get<number>('SMTP_PORT')) || 465,
+      secure: true, // true for 465, false for other ports
+      auth: {
+        user: this.configService.get<string>('SMTP_USER'),
+        pass: this.configService.get<string>('SMTP_PASS'),
+      },
+      tls: {
+        rejectUnauthorized: false, // Useful for certain hosting providers
+      },
+    });
+  }
+
+  async verifyConnection(): Promise<{ success: boolean; error?: string }> {
+    try {
+      await this.transporter.verify();
+      return { success: true };
+    } catch (err) {
+      this.logger.error(`SMTP Verification failed: ${err.message}`);
+      return { success: false, error: err.message };
     }
+  }
 
-    async sendAlertEmail(recipients: string[], endpoint: string, error: string) {
-        if (!recipients.length) return;
+  async sendAlertEmail(recipients: string[], endpoint: string, error: string) {
+    if (!recipients.length) return;
 
-        const from = this.configService.get<string>('SMTP_FROM') || 'api-sentinel@status.local';
+    const from = this.configService.get<string>('SMTP_FROM') || 'api-sentinel@status.local';
 
-        try {
-            await this.transporter.sendMail({
-                from,
-                to: recipients.join(', '),
-                subject: `⚠️ API Alert: ${endpoint} failed`,
-                html: `
+    try {
+      await this.transporter.sendMail({
+        from,
+        to: recipients.join(', '),
+        subject: `⚠️ API Alert: ${endpoint} failed`,
+        html: `
           <div style="font-family: sans-serif; padding: 20px; border: 1px solid #ff4444; border-radius: 8px;">
             <h2 style="color: #ff4444;">API Monitoring Alert</h2>
             <p>The following endpoint has reported an error:</p>
@@ -45,37 +55,37 @@ export class MailService {
             </p>
           </div>
         `,
-            });
-            this.logger.log(`Alert email sent for ${endpoint} to ${recipients.length} recipients`);
-        } catch (err) {
-            this.logger.error(`Failed to send alert email: ${err.message}`);
-        }
+      });
+      this.logger.log(`Alert email sent for ${endpoint} to ${recipients.length} recipients`);
+    } catch (err) {
+      this.logger.error(`Failed to send alert email: ${err.message}`);
     }
+  }
 
-    async sendDailyReport(recipients: string[], stats: any[]) {
-        if (!recipients.length) return;
+  async sendDailyReport(recipients: string[], stats: any[]) {
+    if (!recipients.length) return;
 
-        const from = this.configService.get<string>('SMTP_FROM') || 'api-sentinel@status.local';
-        const date = new Date().toLocaleDateString('de-DE');
+    const from = this.configService.get<string>('SMTP_FROM') || 'api-sentinel@status.local';
+    const date = new Date().toLocaleDateString('de-DE');
 
-        const tableRows = stats
-            .map(
-                (s) => `
+    const tableRows = stats
+      .map(
+        (s) => `
       <tr>
         <td style="padding: 8px; border-bottom: 1px solid #eee;">${s.method} ${s.path}</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${s.count}</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; color: ${s.successRate < 100 ? '#ff4444' : '#22c55e'}">${s.successRate.toFixed(1)}%</td>
         <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: right;">${s.avgLatency.toFixed(0)} ms</td>
       </tr>`,
-            )
-            .join('');
+      )
+      .join('');
 
-        try {
-            await this.transporter.sendMail({
-                from,
-                to: recipients.join(', '),
-                subject: `📊 API Sentinel Daily Report: ${date}`,
-                html: `
+    try {
+      await this.transporter.sendMail({
+        from,
+        to: recipients.join(', '),
+        subject: `📊 API Sentinel Daily Report: ${date}`,
+        html: `
           <div style="font-family: sans-serif; padding: 20px;">
             <h2 style="color: #3b82f6;">Daily Monitoring Summary</h2>
             <p>Summary of API health for ${date}:</p>
@@ -97,10 +107,10 @@ export class MailService {
             </p>
           </div>
         `,
-            });
-            this.logger.log(`Daily report email sent to ${recipients.length} recipients`);
-        } catch (err) {
-            this.logger.error(`Failed to send daily report: ${err.message}`);
-        }
+      });
+      this.logger.log(`Daily report email sent to ${recipients.length} recipients`);
+    } catch (err) {
+      this.logger.error(`Failed to send daily report: ${err.message}`);
     }
+  }
 }

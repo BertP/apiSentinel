@@ -15,6 +15,7 @@ import { Subject, Observable, map } from 'rxjs';
 import { MonitorConfigService } from './monitor-config.service';
 import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
 import { OauthManagerService } from './oauth-manager/oauth-manager.service';
+import { MailService } from './mail/mail.service';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import * as path from 'path';
@@ -32,6 +33,7 @@ export class MonitorController {
     private readonly openapiParser: OpenapiParserService,
     private readonly oauthManager: OauthManagerService,
     @InjectQueue('monitor') private readonly monitorQueue: Queue,
+    private readonly mailService: MailService,
   ) { }
 
   static pushLog(log: MonitorLog) {
@@ -147,5 +149,10 @@ export class MonitorController {
   async triggerReport() {
     await this.monitorQueue.add('daily-report', {});
     return { success: true, message: 'Statistics report queued' };
+  }
+
+  @Get('verify-smtp')
+  async verifySmtp() {
+    return await this.mailService.verifyConnection();
   }
 }
