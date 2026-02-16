@@ -1,5 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { Subject } from 'rxjs';
+import { Injectable, Logger } from '@nestjs/common';
+import { BehaviorSubject } from 'rxjs';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -13,7 +13,7 @@ export interface MonitorConfiguration {
 }
 
 @Injectable()
-export class MonitorConfigService implements OnModuleInit {
+export class MonitorConfigService {
   private readonly logger = new Logger(MonitorConfigService.name);
   private readonly configPath = path.join(process.cwd(), 'config.json');
 
@@ -25,11 +25,13 @@ export class MonitorConfigService implements OnModuleInit {
     stateAutomationEnabled: false,
   };
 
-  private configUpdateSubject = new Subject<MonitorConfiguration>();
-  public configUpdates$ = this.configUpdateSubject.asObservable();
+  private configUpdateSubject: BehaviorSubject<MonitorConfiguration>;
+  public configUpdates$;
 
-  onModuleInit() {
+  constructor() {
     this.loadConfig();
+    this.configUpdateSubject = new BehaviorSubject<MonitorConfiguration>(this.currentConfig);
+    this.configUpdates$ = this.configUpdateSubject.asObservable();
   }
 
   private loadConfig() {
@@ -38,7 +40,6 @@ export class MonitorConfigService implements OnModuleInit {
         const data = fs.readFileSync(this.configPath, 'utf8');
         this.currentConfig = { ...this.currentConfig, ...JSON.parse(data) };
         this.logger.log(`Configuration loaded from ${this.configPath}`);
-        this.configUpdateSubject.next(this.currentConfig);
       }
     } catch (err) {
       this.logger.error(`Failed to load config: ${err.message}`);
