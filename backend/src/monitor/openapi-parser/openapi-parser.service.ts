@@ -21,8 +21,8 @@ export class OpenapiParserService {
         }
       }
 
-      this.logger.log(`Parsing OpenAPI definition from: ${absolutePath}`);
-      const api = await SwaggerParser.parse(absolutePath);
+      this.logger.log(`Parsing and dereferencing OpenAPI definition from: ${absolutePath}`);
+      const api = await SwaggerParser.dereference(absolutePath);
       return api;
     } catch (error) {
       this.logger.error(`Error parsing OpenAPI definition: ${error.message}`);

@@ -150,7 +150,7 @@ export class MonitorEngineService {
 
       return { success: true, details: { info: 'Validated' } };
     } catch (err) {
-      this.logger.warn('Validation engine error', err);
+      this.logger.warn(`Validation engine error for ${method} ${path}: ${err.message}`, err.stack);
       return { success: true, details: { error: err.message } };
     }
   }
