@@ -8,9 +8,13 @@ interface Endpoint {
     summary: string;
 }
 
-alertEndpoints: string[];
-deviceId: string;
-stateAutomationEnabled: boolean;
+interface Config {
+    manualToken?: string;
+    activeEndpoints: string[];
+    emailRecipients: string[];
+    alertEndpoints: string[];
+    deviceId: string;
+    stateAutomationEnabled: boolean;
 }
 
 interface OAuthStatus {
