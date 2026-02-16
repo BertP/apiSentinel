@@ -12,6 +12,7 @@ import { MonitorProcessor } from './monitor.processor';
 import { TaskSchedulerService } from './task-scheduler.service';
 import { MonitorConfigService } from './monitor-config.service';
 import { MonitorController } from './monitor.controller';
+import { MailService } from './mail/mail.service';
 
 @Module({
   imports: [
@@ -30,7 +31,13 @@ import { MonitorController } from './monitor.controller';
     MonitorProcessor,
     TaskSchedulerService,
     MonitorConfigService,
+    MailService,
   ],
-  exports: [OpenapiParserService, MonitorEngineService, OauthManagerService],
+  exports: [
+    OpenapiParserService,
+    MonitorEngineService,
+    OauthManagerService,
+    MailService,
+  ],
 })
-export class MonitorModule {}
+export class MonitorModule { }

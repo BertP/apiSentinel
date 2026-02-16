@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, Search, Check, X, Shield, Globe } from 'lucide-react';
+import { Settings, Save, Search, Check, X, Shield, Globe, ShieldAlert } from 'lucide-react';
 import axios from 'axios';
 
 interface Endpoint {
@@ -11,6 +11,8 @@ interface Endpoint {
 interface Config {
     manualToken?: string;
     activeEndpoints: string[];
+    emailRecipients: string[];
+    alertEndpoints: string[];
 }
 
 interface OAuthStatus {
@@ -23,7 +25,7 @@ interface OAuthStatus {
 
 export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [availableEndpoints, setAvailableEndpoints] = useState<Endpoint[]>([]);
-    const [config, setConfig] = useState<Config>({ activeEndpoints: [] });
+    const [config, setConfig] = useState<Config>({ activeEndpoints: [], emailRecipients: [], alertEndpoints: [] });
     const [oauthStatus, setOauthStatus] = useState<OAuthStatus | null>(null);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
@@ -78,6 +80,25 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 ? prev.activeEndpoints.filter(p => p !== path)
                 : [...prev.activeEndpoints, path]
         }));
+    };
+
+    const handleToggleAlert = (path: string) => {
+        setConfig(prev => {
+            const isAlert = prev.alertEndpoints.includes(path);
+            if (!isAlert && prev.alertEndpoints.length >= 3) return prev;
+
+            return {
+                ...prev,
+                alertEndpoints: isAlert
+                    ? prev.alertEndpoints.filter(p => p !== path)
+                    : [...prev.alertEndpoints, path]
+            };
+        });
+    };
+
+    const handleEmailChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const emails = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+        setConfig(prev => ({ ...prev, emailRecipients: emails }));
     };
 
     const handleSave = async () => {
@@ -166,6 +187,16 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-mono text-slate-300 h-24 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 outline-none transition-all resize-none"
                             />
                         </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs text-slate-500">Email Recipients (comma separated)</label>
+                            <textarea
+                                value={config.emailRecipients.join(', ')}
+                                onChange={handleEmailChange}
+                                placeholder="admin@example.com, dev@example.com..."
+                                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-sm font-mono text-slate-300 h-20 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 outline-none transition-all resize-none"
+                            />
+                        </div>
                     </section>
 
                     {/* Endpoints Section */}
@@ -197,17 +228,19 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                             {filteredEndpoints.map((endpoint) => {
                                 const isActive = config.activeEndpoints.includes(endpoint.path);
                                 return (
-                                    <button
+                                    <div
                                         key={`${endpoint.method}-${endpoint.path}`}
-                                        onClick={() => handleToggleEndpoint(endpoint.path)}
                                         className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all ${isActive
                                             ? 'bg-blue-500/10 border-blue-500/30'
                                             : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                                             }`}
                                     >
-                                        <div className={`shrink-0 p-1.5 rounded-lg ${isActive ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                                        <button
+                                            onClick={() => handleToggleEndpoint(endpoint.path)}
+                                            className={`shrink-0 p-1.5 rounded-lg ${isActive ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500'}`}
+                                        >
                                             <Check className={`w-3 h-3 ${isActive ? 'opacity-100' : 'opacity-0'}`} />
-                                        </div>
+                                        </button>
                                         <div className="text-left flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${endpoint.method === 'GET' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400'
@@ -218,7 +251,18 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                             </div>
                                             <p className="text-[11px] text-slate-500 truncate">{endpoint.summary}</p>
                                         </div>
-                                    </button>
+                                        {isActive && (
+                                            <button
+                                                onClick={() => handleToggleAlert(endpoint.path)}
+                                                className={`p-2 rounded-lg transition-all ${config.alertEndpoints.includes(endpoint.path)
+                                                    ? 'bg-amber-500/20 text-amber-500'
+                                                    : 'bg-slate-800 text-slate-600 hover:text-slate-400'}`}
+                                                title={config.alertEndpoints.includes(endpoint.path) ? "Active Alert" : "Set as Alert Endpoint"}
+                                            >
+                                                <ShieldAlert className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
                                 );
                             })}
                         </div>

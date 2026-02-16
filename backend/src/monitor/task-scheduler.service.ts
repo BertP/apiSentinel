@@ -77,6 +77,18 @@ export class TaskSchedulerService implements OnModuleInit {
         },
       );
       this.logger.log('Scheduled: OAuth2 health check (6h interval)');
+
+      // Daily stats report (every 24h)
+      const dailyInterval = 24 * 60 * 60 * 1000;
+      await this.monitorQueue.add(
+        'daily-report',
+        {},
+        {
+          repeat: { every: dailyInterval },
+          jobId: 'daily-stats-report',
+        },
+      );
+      this.logger.log('Scheduled: Daily statistics report (24h interval)');
     } catch (error) {
       this.logger.error(`Failed to schedule tasks: ${error.message}`);
     }

@@ -29,7 +29,7 @@ export class MonitorController {
     private readonly configService: MonitorConfigService,
     private readonly openapiParser: OpenapiParserService,
     private readonly oauthManager: OauthManagerService,
-  ) {}
+  ) { }
 
   static pushLog(log: MonitorLog) {
     this.logSubject.next(log);
@@ -128,7 +128,13 @@ export class MonitorController {
 
   @Post('config')
   async updateConfig(
-    @Body() config: { manualToken?: string; activeEndpoints: string[] },
+    @Body()
+    config: {
+      manualToken?: string;
+      activeEndpoints: string[];
+      emailRecipients: string[];
+      alertEndpoints: string[];
+    },
   ) {
     this.configService.updateConfig(config);
     return { success: true, config: this.configService.getConfig() };
