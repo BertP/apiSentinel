@@ -140,6 +140,7 @@ export class MonitorController {
       emailRecipients: string[];
       alertEndpoints: string[];
       deviceId: string;
+      stateAutomationEnabled: boolean;
     },
   ) {
     this.configService.updateConfig(config);

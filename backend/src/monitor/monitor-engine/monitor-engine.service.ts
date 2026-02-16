@@ -84,6 +84,7 @@ export class MonitorEngineService {
         status: response.status,
         latency,
         success: response.status >= 200 && response.status < 300,
+        data: response.data,
         validationResult: validation.details,
         validationError: validation.error,
       };

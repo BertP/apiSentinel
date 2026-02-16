@@ -9,6 +9,7 @@ export interface MonitorConfiguration {
   emailRecipients: string[];
   alertEndpoints: string[];
   deviceId: string;
+  stateAutomationEnabled: boolean;
 }
 
 @Injectable()
@@ -21,6 +22,7 @@ export class MonitorConfigService implements OnModuleInit {
     emailRecipients: [],
     alertEndpoints: [],
     deviceId: '',
+    stateAutomationEnabled: false,
   };
 
   private configUpdateSubject = new Subject<MonitorConfiguration>();

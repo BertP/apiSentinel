@@ -8,12 +8,9 @@ interface Endpoint {
     summary: string;
 }
 
-interface Config {
-    manualToken?: string;
-    activeEndpoints: string[];
-    emailRecipients: string[];
-    alertEndpoints: string[];
-    deviceId: string;
+alertEndpoints: string[];
+deviceId: string;
+stateAutomationEnabled: boolean;
 }
 
 interface OAuthStatus {
@@ -26,7 +23,7 @@ interface OAuthStatus {
 
 export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const [availableEndpoints, setAvailableEndpoints] = useState<Endpoint[]>([]);
-    const [config, setConfig] = useState<Config>({ activeEndpoints: [], emailRecipients: [], alertEndpoints: [], deviceId: '' });
+    const [config, setConfig] = useState<Config>({ activeEndpoints: [], emailRecipients: [], alertEndpoints: [], deviceId: '', stateAutomationEnabled: false });
     const [oauthStatus, setOauthStatus] = useState<OAuthStatus | null>(null);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
@@ -240,6 +237,24 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm font-mono text-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 outline-none transition-all"
                             />
                             <p className="text-[10px] text-slate-500 italic">This ID will replace {'{deviceId}'} in any path containing that parameter.</p>
+                        </div>
+
+                        <div className="flex items-center justify-between p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-blue-500/10 rounded-lg">
+                                    <Activity className="w-4 h-4 text-blue-400" />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-semibold text-white">State Automation</h4>
+                                    <p className="text-[10px] text-slate-400">Toggle RUNNING ↔ SUPERFREEZING automatically</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setConfig({ ...config, stateAutomationEnabled: !config.stateAutomationEnabled })}
+                                className={`w-10 h-5 rounded-full transition-colors relative ${config.stateAutomationEnabled ? 'bg-blue-500' : 'bg-slate-700'}`}
+                            >
+                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${config.stateAutomationEnabled ? 'left-6' : 'left-1'}`} />
+                            </button>
                         </div>
 
                         <div className="space-y-2">

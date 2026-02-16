@@ -89,6 +89,22 @@ export class MonitorProcessor {
 
     MonitorController.pushLog(log);
 
+    // State Automation (Toggling) Logic
+    const config = this.monitorConfig.getConfig();
+    if (config.stateAutomationEnabled && path.includes('/actions') && method.toUpperCase() === 'GET' && result.success && result.data) {
+      const actions = result.data.processaction || [];
+      const deviceId = config.deviceId || 'TRIAL_DEVICE_ID';
+      const actionsPath = `/devices/${deviceId}/actions`;
+
+      if (actions.includes(4)) {
+        this.logger.log(`State Automation: Triggering SUPERFREEZING (4) for ${deviceId}`);
+        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' });
+      } else if (actions.includes(5)) {
+        this.logger.log(`State Automation: Triggering RUNNING (5) for ${deviceId}`);
+        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' });
+      }
+    }
+
     this.logger.log(`Job ${job.id} completed. Saved log entry.`);
   }
 
