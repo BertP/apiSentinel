@@ -40,6 +40,11 @@ services:
       - OAUTH2_TOKEN_URL=${OAUTH2_TOKEN_URL}
       - OAUTH2_AUTH_URL=${OAUTH2_AUTH_URL}
       - MONITOR_INTERVAL_MS=${MONITOR_INTERVAL_MS}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SMTP_FROM=${SMTP_FROM}
       - TZ=Europe/Berlin
     depends_on:
       - db
