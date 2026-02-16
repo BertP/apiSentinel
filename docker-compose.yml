@@ -53,6 +53,7 @@ services:
       - monitor_net
     volumes:
       - ./openapi.yaml:/openapi.yaml
+      - ./backend/config.json:/app/config.json
 
   frontend:
     build:

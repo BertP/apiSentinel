@@ -1,0 +1,9 @@
+{
+    "activeEndpoints": [
+        "/devices"
+    ],
+    "emailRecipients": [],
+    "alertEndpoints": [],
+    "deviceId": "",
+    "stateAutomationEnabled": false
+}
