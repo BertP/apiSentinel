@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Save, Search, Check, X, Shield, Globe, ShieldAlert, Mail, Activity, ShieldCheck } from 'lucide-react';
+import { Settings, Save, Search, Check, X, Shield, Globe, ShieldAlert, Mail, Activity } from 'lucide-react';
 import axios from 'axios';
 
 interface Endpoint {
