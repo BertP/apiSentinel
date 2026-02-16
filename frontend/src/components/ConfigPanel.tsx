@@ -169,9 +169,25 @@ export const ConfigPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                             <p className="text-sm text-slate-400">Manage manual tokens and active endpoints</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
-                        <X className="w-5 h-5 text-slate-500" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const res = await axios.get('/monitor/config');
+                                    setConfig(res.data);
+                                } catch (err) {
+                                    console.error('Failed to reload config:', err);
+                                }
+                            }}
+                            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2"
+                        >
+                            <Activity className="w-3 h-3" />
+                            Load Config
+                        </button>
+                        <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+                            <X className="w-5 h-5 text-slate-500" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}

@@ -14,6 +14,8 @@ import { MailService } from './mail/mail.service';
 @Processor('monitor')
 export class MonitorProcessor {
   private readonly logger = new Logger(MonitorProcessor.name);
+  private failureCounts = new Map<string, number>();
+  private alertedEndpoints = new Set<string>();
 
   constructor(
     @InjectRepository(MonitorLog)
@@ -27,6 +29,7 @@ export class MonitorProcessor {
   @Process('check')
   async handleCheck(job: Job<{ path: string; method: string }>) {
     const { path, method } = job.data;
+    const alertKey = `${method} ${path}`;
 
     // Priority: env variable > default
     const baseUrl =
@@ -55,14 +58,32 @@ export class MonitorProcessor {
 
     // Alert Handling
     if (!result.success) {
+      const currentFailures = (this.failureCounts.get(alertKey) || 0) + 1;
+      this.failureCounts.set(alertKey, currentFailures);
+
       const config = this.monitorConfig.getConfig();
-      if (config.alertEndpoints.includes(path) && config.emailRecipients.length > 0) {
-        this.logger.log(`Failure detected on alert-endpoint ${path}. Triggering email.`);
-        await this.mailService.sendAlertEmail(
-          config.emailRecipients,
-          `${method} ${path}`,
-          result.error || `HTTP ${result.status}`,
-        );
+      const isAlertEndpoint = config.alertEndpoints.includes(path);
+      const hasRecipients = config.emailRecipients.length > 0;
+
+      if (isAlertEndpoint && hasRecipients) {
+        if (currentFailures >= 5 && !this.alertedEndpoints.has(alertKey)) {
+          this.logger.log(`Consecutive failure threshold (5) reached for ${alertKey}. Triggering email.`);
+          await this.mailService.sendAlertEmail(
+            config.emailRecipients,
+            alertKey,
+            result.error || `HTTP ${result.status}`,
+          );
+          this.alertedEndpoints.add(alertKey);
+        } else {
+          this.logger.log(`Failure ${currentFailures}/5 for ${alertKey}. Multi-failure buffer active.`);
+        }
+      }
+    } else {
+      // Success resets the counters
+      if (this.failureCounts.has(alertKey)) {
+        this.logger.log(`Success detected for ${alertKey}. Resetting failure counters.`);
+        this.failureCounts.delete(alertKey);
+        this.alertedEndpoints.delete(alertKey);
       }
     }
 

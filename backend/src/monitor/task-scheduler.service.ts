@@ -66,8 +66,8 @@ export class TaskSchedulerService implements OnModuleInit {
         this.logger.log(`Scheduled: ${endpoint.method} ${endpoint.path}`);
       }
 
-      // 6-hour auth health check
-      const authInterval = 6 * 60 * 60 * 1000; // 6 hours
+      // 1-hour auth health check
+      const authInterval = 1 * 60 * 60 * 1000; // 1 hour
       await this.monitorQueue.add(
         'auth-check',
         {},
@@ -76,19 +76,18 @@ export class TaskSchedulerService implements OnModuleInit {
           jobId: 'auth-health-check',
         },
       );
-      this.logger.log('Scheduled: OAuth2 health check (6h interval)');
+      this.logger.log('Scheduled: OAuth2 health check (1h interval)');
 
-      // Daily stats report (every 24h)
-      const dailyInterval = 24 * 60 * 60 * 1000;
+      // Daily stats report (at 6:00 AM)
       await this.monitorQueue.add(
         'daily-report',
         {},
         {
-          repeat: { every: dailyInterval },
+          repeat: { cron: '0 6 * * *' },
           jobId: 'daily-stats-report',
         },
       );
-      this.logger.log('Scheduled: Daily statistics report (24h interval)');
+      this.logger.log('Scheduled: Daily statistics report (CRON 0 6 * * *)');
     } catch (error) {
       this.logger.error(`Failed to schedule tasks: ${error.message}`);
     }
