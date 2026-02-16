@@ -27,6 +27,10 @@ sudo apt update && sudo apt upgrade -y
 > echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 > ```
 
+# Redis Optimization (Memory Overcommit)
+echo 'vm.overcommit_memory = 1' | sudo tee -a /etc/sysctl.conf
+sudo sysctl vm.overcommit_memory=1
+
 ## 2. Install Docker & Docker Compose
 
 Run the following commands to install the latest official Docker engine:
