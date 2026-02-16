@@ -53,6 +53,7 @@ export class MonitorProcessor {
       validationResult: (result as any).validationResult,
       validationError: (result as any).validationError,
       responseData: result.data,
+      requestData: (result as any).requestData,
     });
 
     try {

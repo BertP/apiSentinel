@@ -39,6 +39,7 @@ export class MonitorEngineService {
     const pathWithParams = endpoint.path.replace('{deviceId}', deviceId);
     const url = `${baseUrl}${pathWithParams}`;
     const startTime = Date.now();
+    let data: any = manualData;
 
     try {
       this.logger.log(`Checking endpoint: ${endpoint.method} ${url}`);
@@ -50,7 +51,6 @@ export class MonitorEngineService {
       };
 
       // Handle PUT body
-      let data: any = manualData;
       if (endpoint.method.toUpperCase() === 'PUT' && data === undefined) {
         data = this.generateSampleBody(endpoint.path, endpoint.method);
         this.logger.log(`Generated PUT body: ${JSON.stringify(data)}`);
@@ -86,6 +86,7 @@ export class MonitorEngineService {
         latency,
         success: response.status >= 200 && response.status < 300,
         data: response.data,
+        requestData: data,
         validationResult: validation.details,
         validationError: validation.error,
       };
@@ -104,6 +105,7 @@ export class MonitorEngineService {
         latency,
         success: false,
         error: error.message,
+        requestData: data,
       };
     }
   }

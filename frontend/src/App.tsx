@@ -28,6 +28,7 @@ interface Log {
   success: boolean;
   validationError?: string;
   responseData?: any;
+  requestData?: any;
 }
 
 function App() {
@@ -272,6 +273,7 @@ function App() {
         <ResponseViewer
           title={`${selectedLog.method} ${selectedLog.path}`}
           data={selectedLog.responseData}
+          requestData={selectedLog.requestData}
           onClose={() => setSelectedLog(null)}
         />
       )}
