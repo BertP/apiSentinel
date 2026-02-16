@@ -98,10 +98,10 @@ export class MonitorProcessor {
 
       if (actions.includes(4)) {
         this.logger.log(`State Automation: Triggering SUPERFREEZING (4) for ${deviceId}`);
-        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' });
+        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, { processaction: 4 });
       } else if (actions.includes(5)) {
         this.logger.log(`State Automation: Triggering RUNNING (5) for ${deviceId}`);
-        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' });
+        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, { processaction: 5 });
       }
     }
 

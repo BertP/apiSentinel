@@ -30,6 +30,7 @@ export class MonitorEngineService {
   async checkEndpoint(
     baseUrl: string,
     endpoint: { path: string; method: string },
+    manualData?: any,
   ) {
     const config = this.configService.getConfig();
     const deviceId = config.deviceId || 'TRIAL_DEVICE_ID';
@@ -49,8 +50,8 @@ export class MonitorEngineService {
       };
 
       // Handle PUT body
-      let data: any = undefined;
-      if (endpoint.method.toUpperCase() === 'PUT') {
+      let data: any = manualData;
+      if (endpoint.method.toUpperCase() === 'PUT' && data === undefined) {
         data = this.generateSampleBody(endpoint.path, endpoint.method);
         this.logger.log(`Generated PUT body: ${JSON.stringify(data)}`);
       }
