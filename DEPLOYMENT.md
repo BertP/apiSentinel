@@ -1,59 +1,139 @@
-# Deployment Guide: Production Environment
+# 🐧 Ubuntu Server Deployment Guide
 
-This guide explains how to deploy the full **API Sentinel** stack to a production server (e.g., Ubuntu).
+This guide provides a comprehensive walkthrough for deploying **API Sentinel** on a fresh Ubuntu Server (22.04 or 24.04 LTS).
 
-## 🛠️ Prerequisites
+## 📋 Table of Contents
+1. [System Preparation](#1-system-preparation)
+2. [Install Docker & Docker Compose](#2-install-docker--docker-compose)
+3. [Project Setup](#3-project-setup)
+4. [Security & Firewall](#4-security--firewall)
+5. [Maintenance & Monitoring](#5-maintenance--monitoring)
 
-- **Docker & Docker Compose**
-- **Public Domain** (or Static IP)
-- **SSL Certificate** (Recommended for production)
+---
 
-## 📦 Deployment Steps
+## 1. System Preparation
 
-### 1. Clone & Configure
-
-```bash
-git clone https://github.com/BertP/apiMonitor.git /opt/apiMonitor
-cd /opt/apiMonitor
-cp .env.example .env
-nano .env # update your credentials!
-```
-
-### 2. Launch with Docker Compose
-
-The `docker-compose.yml` file is configured to orchestrate everything:
+First, ensure your system is up to date:
 
 ```bash
-docker compose up -d --build
+sudo apt update && sudo apt upgrade -y
 ```
 
-### 3. Verification
+> [!TIP]
+> If your server has less than 2GB of RAM, consider creating a swap file to prevent out-of-memory errors during Docker builds:
+> ```bash
+> sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+> sudo mkswap /swapfile && sudo swapon /swapfile
+> echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+> ```
 
-- **Dashboard**: `http://your-server-ip`
-- **Backend API**: `http://your-server-ip:3000`
-- **Logs**: `docker compose logs -f`
+## 2. Install Docker & Docker Compose
 
-## 🏗️ Docker Architecture Detail
+Run the following commands to install the latest official Docker engine:
 
-- **PostgreSQL**: Stores logs and auth statistics on a named volume `postgres_data`.
-- **Redis**: Acts as the worker queue broker.
-- **Backend**: Auto-syncs `openapi.yaml` and executes monitoring jobs.
-- **Frontend**: Served via Nginx on port 80.
-
-## 🛡️ Production Recommendations
-
-### Security
-- **Fail2Ban**: Install to protect SSH and API ports.
-- **Firewall**: Ensure only ports 80, 443, and 3000 (if needed) are open.
-
-### Monitoring the Monitor
-- Periodically check the **OAuth2 Health Widget** in the dashboard to ensure the backend can still reach the target Miele API.
-- Check `docker compose logs -f backend` for any parsing errors if the `openapi.yaml` is modified.
-
-## 🔄 Updates
-
-To update the application:
 ```bash
-git pull origin main
-docker compose up -d --build
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 ```
+
+### Post-Install Step
+Allow your user to run Docker commands without `sudo`:
+```bash
+sudo usermod -aG docker $USER
+# IMPORTANT: Log out and log back in for this to take effect!
+```
+
+## 3. Project Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/BertP/apiMonitor.git ~/apiMonitor
+   cd ~/apiMonitor
+   ```
+
+2. **Configure Environment Variables**:
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+   *Edit the OAuth2 credentials and your PostgreSQL connection strings if necessary.*
+
+3. **Launch the Stack**:
+   ```bash
+   docker compose up -d --build
+   ```
+
+## 4. Security & Firewall (UFW)
+
+Ubuntu comes with `ufw` (Uncomplicated Firewall). Configure it to allow only necessary traffic:
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 3000/tcp # Backend API
+sudo ufw enable
+```
+
+## 5. Maintenance & Monitoring
+
+### Common Commands
+- **Check Status**: `docker compose ps`
+- **View Logs**: `docker compose logs -f`
+- **Restart Services**: `docker compose restart`
+
+### Real-Time Monitoring
+API Sentinel uses **Server-Sent Events (SSE)**. Ensure your reverse proxy (if using Nginx) is configured to handle long-lived connections:
+```nginx
+proxy_set_header Connection '';
+proxy_http_version 1.1;
+chunked_transfer_encoding off;
+```
+
+## 6. Environment Configuration (.env)
+
+The `.env` file is critical as it contains database credentials and sensitive OAuth2 secrets for the Miele API.
+
+### Essential Variables
+
+| Variable | Description |
+| :--- | :--- |
+| `DATABASE_URL` | Connection string for PostgreSQL. Inside Docker, use `postgresql://api_monitor:password@db:5432/api_sentinel`. |
+| `REDIS_HOST` | Set to `redis` for Docker deployments. |
+| `OAUTH2_CLIENT_ID` | Your Miele Developer Client ID. |
+| `OAUTH2_CLIENT_SECRET` | Your Miele Developer Client Secret. |
+| `OAUTH2_USERNAME` | Your Miele Account email. |
+| `OAUTH2_PASSWORD` | Your Miele Account password. |
+| `MONITOR_INTERVAL_MS` | How often to poll endpoints (e.g., `60000` for 1 minute). |
+
+### Security Best Practices
+> [!CAUTION]
+> **Never commit your `.env` file to version control.** It is already listed in `.gitignore`. For production, ensure the file permissions are restricted:
+> ```bash
+> chmod 600 .env
+> ```
+
+---
+
+## 🛠️ Troubleshooting
+
+**Question: Containers keep restarting?**
+*Check logs: `docker compose logs backend`. Usually, this is due to missing environment variables.*
+
+**Question: Database connection failed?**
+*Ensure the `DATABASE_URL` in `.env` uses the service name `db` instead of `localhost` when running inside Docker.*

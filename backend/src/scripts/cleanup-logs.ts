@@ -1,6 +1,6 @@
 
 import { createConnection } from 'typeorm';
-import { MonitorLog } from './src/monitor/entities/monitor-log.entity';
+import { MonitorLog } from '../monitor/entities/monitor-log.entity';
 
 async function cleanup() {
     const connection = await createConnection({
