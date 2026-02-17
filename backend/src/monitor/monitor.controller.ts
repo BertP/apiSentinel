@@ -106,6 +106,7 @@ export class MonitorController {
           avgLatency: 0,
           lastStatus: log.statusCode,
           lastTimestamp: log.timestamp,
+          deviceId: log.deviceId,
         };
       }
       stats[key].count++;

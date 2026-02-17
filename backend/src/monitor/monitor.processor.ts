@@ -30,6 +30,7 @@ export class MonitorProcessor {
   async handleCheck(job: Job<{ path: string; method: string }>) {
     const { path, method } = job.data;
     const alertKey = `${method} ${path}`;
+    const config = this.monitorConfig.getConfig();
 
     // Priority: env variable > default
     const baseUrl =
@@ -43,26 +44,7 @@ export class MonitorProcessor {
       method,
     });
 
-    const log = this.logRepository.create({
-      path,
-      method,
-      statusCode: result.status,
-      latency: result.latency,
-      success: result.success,
-      error: result.error,
-      validationResult: (result as any).validationResult,
-      validationError: (result as any).validationError,
-      responseData: result.data,
-      requestData: (result as any).requestData,
-    });
-
-    try {
-      this.logger.log(`Saving log entry for ${method} ${path}...`);
-      await this.logRepository.save(log);
-      this.logger.log(`Log entry saved (ID: ${log.id}).`);
-    } catch (dbErr) {
-      this.logger.error(`DATABASE SAVE FAILED: ${dbErr.message}`, dbErr.stack);
-    }
+    await this.recordLog(path, method, result);
 
     // Alert Handling
     if (!result.success) {
@@ -95,10 +77,7 @@ export class MonitorProcessor {
       }
     }
 
-    MonitorController.pushLog(log);
-
     // State Automation (Toggling) Logic
-    const config = this.monitorConfig.getConfig();
     if (config.stateAutomationEnabled && path.includes('/actions') && method.toUpperCase() === 'GET' && result.success && result.data) {
       this.logger.log(`State Automation: GET actions detected for ${path}. Analyzing response...`);
 
@@ -107,21 +86,52 @@ export class MonitorProcessor {
       const actionsPath = `/devices/${deviceId}/actions`;
 
       if (actions.includes(4)) {
-        this.logger.log(`State Automation: Found action 4 (SuperFreezing) in response. Building PUT body...`);
+        this.logger.log(`State Automation: Found action 4 (SuperFreezing) in response. Triggering PUT...`);
         const payload = { processAction: 4 };
-        this.logger.log(`State Automation: Triggering PUT ${actionsPath} with ${JSON.stringify(payload)}`);
-        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, payload);
+        const result = await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, payload);
+        await this.recordLog(actionsPath, 'PUT', result);
       } else if (actions.includes(5)) {
-        this.logger.log(`State Automation: Found action 5 (Running) in response. Building PUT body...`);
+        this.logger.log(`State Automation: Found action 5 (Running) in response. Triggering PUT...`);
         const payload = { processAction: 5 };
-        this.logger.log(`State Automation: Triggering PUT ${actionsPath} with ${JSON.stringify(payload)}`);
-        await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, payload);
+        const result = await this.monitorEngine.checkEndpoint(baseUrl, { path: actionsPath, method: 'PUT' }, payload);
+        await this.recordLog(actionsPath, 'PUT', result);
       } else {
         this.logger.log(`State Automation: No target actions (4 or 5) found in ${JSON.stringify(actions)}`);
       }
     }
 
     this.logger.log(`Job ${job.id} completed. Saved log entry.`);
+  }
+
+  private async recordLog(path: string, method: string, result: any) {
+    const config = this.monitorConfig.getConfig();
+    const deviceId = config.deviceId || 'TRIAL_DEVICE_ID';
+
+    const log = this.logRepository.create({
+      path,
+      deviceId,
+      method,
+      statusCode: result.status,
+      latency: result.latency,
+      success: result.success,
+      error: result.error,
+      validationResult: (result as any).validationResult,
+      validationError: (result as any).validationError,
+      responseData: result.data,
+      requestData: (result as any).requestData,
+    });
+
+    this.logger.log(`Recording log: ${method} ${path} (RequestData Present: ${!!log.requestData})`);
+    if (log.requestData) {
+      this.logger.log(`RequestData content: ${JSON.stringify(log.requestData)}`);
+    }
+
+    try {
+      await this.logRepository.save(log);
+      MonitorController.pushLog(log);
+    } catch (err) {
+      this.logger.error(`Failed to save log for ${method} ${path}: ${err.message}`);
+    }
   }
 
   @Process('daily-report')

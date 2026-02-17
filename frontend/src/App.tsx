@@ -17,12 +17,14 @@ interface Stat {
   avgLatency: number;
   lastStatus: number;
   lastTimestamp: string;
+  deviceId?: string;
 }
 
 interface Log {
   timestamp: string;
   path: string;
   method: string;
+  deviceId?: string;
   statusCode: number;
   latency: number;
   success: boolean;
@@ -141,6 +143,9 @@ function App() {
                           {stat.method}
                         </span>
                         <span className="text-sm text-slate-300 font-mono font-medium">{stat.path}</span>
+                        {stat.deviceId && (
+                          <span className="text-[10px] text-slate-500 font-mono">[{stat.deviceId}]</span>
+                        )}
                       </div>
                       <p className="text-xs text-slate-500">Last check: {new Date(stat.lastTimestamp).toLocaleTimeString()}</p>
                     </div>
@@ -215,6 +220,7 @@ function App() {
                 <thead>
                   <tr className="bg-slate-800/50 border-b border-slate-800">
                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Timestamp</th>
+                    <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Device ID</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Endpoint</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Status</th>
                     <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest text-center">Validation</th>
@@ -230,6 +236,9 @@ function App() {
                     >
                       <td className="px-6 py-4 text-sm text-slate-400 tabular-nums">
                         {new Date(log.timestamp).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-xs font-mono text-slate-500">
+                        {log.deviceId || '-'}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">

@@ -13,6 +13,9 @@ export class MonitorLog {
   @Column()
   path: string;
 
+  @Column({ nullable: true })
+  deviceId: string;
+
   @Column()
   method: string;
 

@@ -5,11 +5,13 @@ interface LogEntry {
     timestamp: string;
     path: string;
     method: string;
+    deviceId?: string;
     statusCode: number;
     latency: number;
     success: boolean;
     error?: string;
     responseData?: any;
+    requestData?: any;
 }
 
 interface DebugTerminalProps {
@@ -127,6 +129,9 @@ export const DebugTerminal: React.FC<DebugTerminalProps> = ({ onLogClick }) => {
                             </span>
                             <span className={`font-bold min-w-[35px] ${log.method === 'GET' ? 'text-green-500' : 'text-orange-500'}`}>
                                 {log.method}
+                            </span>
+                            <span className="text-slate-500 text-[10px] font-mono whitespace-nowrap">
+                                [{log.deviceId || '?'}]
                             </span>
                             <span className="text-slate-300 truncate flex-1">{log.path}</span>
                             <span className={`font-bold ${log.success ? 'text-blue-400' : 'text-red-400'}`}>
