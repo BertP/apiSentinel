@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2, Smartphone, Radio, Settings, ExternalLink } from 'lucide-react';
+import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2, Smartphone, Radio, Settings, ExternalLink, Trash2 } from 'lucide-react';
 import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { DebugTerminal } from './components/DebugTerminal';
 import { ConfigPanel } from './components/ConfigPanel';
@@ -63,6 +63,22 @@ function App() {
       setAccountDevices(devicesRes.data);
     } catch (err) {
       console.error('Error fetching data:', err);
+    }
+  };
+
+  const removeEndpoint = async (path: string) => {
+    try {
+      if (!confirm(`Stop monitoring ${path}?`)) return;
+      const configRes = await axios.get(`${API_BASE}/config`);
+      const currentConfig = configRes.data;
+      const updatedConfig = {
+        ...currentConfig,
+        activeEndpoints: currentConfig.activeEndpoints.filter((p: string) => p !== path)
+      };
+      await axios.post(`${API_BASE}/config`, updatedConfig);
+      await fetchData();
+    } catch (err) {
+      console.error('Error removing endpoint:', err);
     }
   };
 
@@ -186,15 +202,24 @@ function App() {
                       </div>
                       <p className="text-xs text-slate-500">Last check: {new Date(stat.lastTimestamp).toLocaleTimeString()}</p>
                     </div>
-                    {stat.lastStatus >= 200 && stat.lastStatus < 300 ? (
-                      <div className="bg-green-500/10 p-2 rounded-full">
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
-                      </div>
-                    ) : (
-                      <div className="bg-red-500/10 p-2 rounded-full">
-                        <AlertCircle className="w-5 h-5 text-red-500" />
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => removeEndpoint(stat.path)}
+                        className="p-2 hover:bg-red-500/10 text-slate-600 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                        title="Remove Card"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      {stat.lastStatus >= 200 && stat.lastStatus < 300 ? (
+                        <div className="bg-green-500/10 p-2 rounded-full">
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        </div>
+                      ) : (
+                        <div className="bg-red-500/10 p-2 rounded-full">
+                          <AlertCircle className="w-5 h-5 text-red-500" />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mb-6 h-32 w-full">
