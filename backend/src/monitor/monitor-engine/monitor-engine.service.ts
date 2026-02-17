@@ -124,15 +124,17 @@ export class MonitorEngineService {
       );
 
       const devices = response.data;
-      return Object.entries(devices).map(([deviceId, data]: [string, any]) => ({
-        deviceId,
-        typeRaw: data.ident?.type?.value_raw,
-        typeLocalized: data.ident?.type?.value_localized,
-        fabNumber: data.ident?.deviceIdentLabel?.fabNumber,
-        protocolVersion: data.ident?.protocolVersion,
-        deviceName: data.ident?.deviceName,
-        techType: data.ident?.deviceIdentLabel?.techType,
-      }));
+      return Object.entries(devices)
+        .map(([deviceId, data]: [string, any]) => ({
+          deviceId,
+          typeRaw: data.ident?.type?.value_raw,
+          typeLocalized: data.ident?.type?.value_localized,
+          fabNumber: data.ident?.deviceIdentLabel?.fabNumber,
+          protocolVersion: data.ident?.protocolVersion,
+          deviceName: data.ident?.deviceName,
+          techType: data.ident?.deviceIdentLabel?.techType,
+        }))
+        .sort((a, b) => (a.typeRaw || 0) - (b.typeRaw || 0));
     } catch (err) {
       this.logger.error(`Failed to fetch account overview: ${err.message}`);
       throw err;
