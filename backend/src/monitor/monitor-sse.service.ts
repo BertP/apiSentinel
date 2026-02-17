@@ -28,13 +28,17 @@ export class MonitorSSEService implements OnModuleDestroy {
     }
 
     async startMonitoring(path: string = '/devices/all/events') {
-        if (this.activeStreams.has(path)) {
-            this.logger.warn(`Stream for ${path} is already active.`);
+        const config = this.configService.getConfig();
+        const deviceId = config.deviceId || 'TRIAL_DEVICE_ID';
+        const dynamicPath = path.replace(/{deviceId}/g, deviceId);
+
+        if (this.activeStreams.has(dynamicPath)) {
+            this.logger.warn(`Stream for ${dynamicPath} is already active.`);
             return;
         }
 
         const baseUrl = process.env.MIELE_API_BASE_URL || 'https://api.mcs3.miele.com/v1';
-        const url = `${baseUrl}${path}`;
+        const url = `${baseUrl}${dynamicPath}`;
 
         this.logger.log(`Starting SSE monitor for ${url}`);
 

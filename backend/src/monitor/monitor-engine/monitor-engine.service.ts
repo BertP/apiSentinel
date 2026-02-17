@@ -35,8 +35,8 @@ export class MonitorEngineService {
     const config = this.configService.getConfig();
     const deviceId = config.deviceId || 'TRIAL_DEVICE_ID';
 
-    // Replace {deviceId} parameter
-    const pathWithParams = endpoint.path.replace('{deviceId}', deviceId);
+    // Replace {deviceId} parameter globally
+    const pathWithParams = endpoint.path.replace(/{deviceId}/g, deviceId);
     const url = `${baseUrl}${pathWithParams}`;
     const startTime = Date.now();
     let data: any = manualData;
