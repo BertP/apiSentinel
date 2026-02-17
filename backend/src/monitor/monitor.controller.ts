@@ -208,6 +208,9 @@ export class MonitorController {
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        .json-content { transition: max-height 0.3s ease-out, opacity 0.2s ease-in; }
+        .collapsed .json-content { max-height: 0; opacity: 0; pointer-events: none; overflow: hidden; padding: 0; border: none; margin: 0; }
+        .collapsed .chevron { transform: rotate(-90deg); }
     </style>
 </head>
 <body class="bg-[#020617] text-slate-300 min-h-screen flex flex-col overflow-hidden">
@@ -268,22 +271,33 @@ export class MonitorController {
                 <div class="flex items-start gap-4">
                     <span class="text-slate-600 font-bold shrink-0 uppercase tracking-tighter text-[10px] mt-0.5">\${timestamp}</span>
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-blue-500 font-black text-[10px] brightness-125 uppercase tracking-widest">SSE_UPDATE</span>
-                            <span class="text-slate-500 font-mono text-[10px]">\${path}</span>
+                        <div class="flex items-center justify-between gap-2 mb-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-blue-500 font-black text-[10px] brightness-125 uppercase tracking-widest">SSE_UPDATE</span>
+                                <span class="text-slate-500 font-mono text-[10px]">\${path}</span>
+                            </div>
+                            <button onclick="toggleJson(this)" class="flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-blue-400 transition-colors uppercase tracking-widest">
+                                <span>JSON</span>
+                                <svg class="chevron w-3 h-3 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
                         </div>
-                        <pre class="text-slate-300 font-mono whitespace-pre-wrap break-all">\${JSON.stringify(parsed, null, 2)}</pre>
+                        <pre class="json-content text-slate-300 font-mono whitespace-pre-wrap break-all bg-slate-900/40 p-3 rounded border border-slate-800/50 mt-1">\${JSON.stringify(parsed, null, 2)}</pre>
                     </div>
                 </div>
             \`;
 
-            logsContainer.appendChild(entry);
-            logsContainer.scrollTop = logsContainer.scrollHeight;
+            logsContainer.prepend(entry);
 
-            // Keep only last 100 entries to prevent memory leak
             if (logsContainer.children.length > 100) {
-                logsContainer.removeChild(logsContainer.firstChild);
+                logsContainer.removeChild(logsContainer.lastChild);
             }
+        }
+
+        function toggleJson(btn) {
+            const entry = btn.closest('.log-entry');
+            entry.classList.toggle('collapsed');
         }
 
         function clearLogs() {
