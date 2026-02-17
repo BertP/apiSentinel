@@ -173,11 +173,18 @@ export class MonitorEngineService {
       // Try to find an example
       if (content.examples) {
         // Prioritize processAction if available
-        const priorityKeys = ['processAction', 'processaction', 'processAction', 'processaction'];
+        const priorityKeys = ['processAction', 'processaction'];
         for (const key of priorityKeys) {
           if (content.examples[key]) {
             const ex = content.examples[key] as any;
-            if (ex.value) return ex.value;
+            if (ex.value) {
+              // Fix: skip or adjust the invalid processAction: 1 which causes 402 errors
+              if (ex.value.processAction === 1) {
+                this.logger.warn(`Skipping invalid processAction: 1 example found in spec. Using 4 (SuperFreezing) as a safer default.`);
+                return { processAction: 4 };
+              }
+              return ex.value;
+            }
           }
         }
 
