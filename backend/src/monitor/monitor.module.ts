@@ -13,6 +13,7 @@ import { TaskSchedulerService } from './task-scheduler.service';
 import { MonitorConfigService } from './monitor-config.service';
 import { MonitorController } from './monitor.controller';
 import { MailService } from './mail/mail.service';
+import { MonitorSSEService } from './monitor-sse.service';
 
 @Module({
   imports: [
@@ -32,12 +33,14 @@ import { MailService } from './mail/mail.service';
     TaskSchedulerService,
     MonitorConfigService,
     MailService,
+    MonitorSSEService,
   ],
   exports: [
     OpenapiParserService,
     MonitorEngineService,
     OauthManagerService,
     MailService,
+    MonitorSSEService,
   ],
 })
 export class MonitorModule { }

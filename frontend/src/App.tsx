@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2, Settings } from 'lucide-react';
+import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2, Smartphone, Radio, Settings } from 'lucide-react';
 import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { DebugTerminal } from './components/DebugTerminal';
 import { ConfigPanel } from './components/ConfigPanel';
@@ -117,6 +117,13 @@ function App() {
           >
             <Shield className="w-5 h-5" />
             <span className="font-medium">Devices</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('streams')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'streams' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 translate-x-1' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+          >
+            <Activity className="w-5 h-5" />
+            <span className="font-medium">Live Monitor</span>
           </button>
           <button
             onClick={() => setIsConfigOpen(true)}
@@ -333,6 +340,84 @@ function App() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'streams' && (
+          <div className="space-y-6">
+            <header className="flex justify-between items-end">
+              <div>
+                <h2 className="text-3xl font-black tracking-tight text-white mb-2">LIVE EVENT MONITOR</h2>
+                <p className="text-slate-500 font-medium">Manage and monitor persistent Server-Sent Event (SSE) streams.</p>
+              </div>
+            </header>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <Radio className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white uppercase tracking-tight">Main Account Stream</h3>
+                    <p className="text-xs text-slate-500">Monitor all devices on this account</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      await axios.post(`${API_BASE}/sse/start`, { path: '/devices/all/events' });
+                      alert('Account wide SSE monitor started!');
+                    }}
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+                  >
+                    Start Stream
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await axios.post(`${API_BASE}/sse/stop`, { path: '/devices/all/events' });
+                      alert('Account wide SSE monitor stopped.');
+                    }}
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm border border-slate-700"
+                  >
+                    Stop
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 opacity-50 cursor-not-allowed">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                    <Smartphone className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white uppercase tracking-tight">Single Device Stream</h3>
+                    <p className="text-xs text-slate-500">High-fidelity monitor for one hardware ID</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button disabled className="flex-1 bg-slate-800 text-slate-500 font-bold py-2 px-4 rounded-lg text-sm border border-slate-700">
+                    Coming Soon
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 backdrop-blur-xl">
+              <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest mb-4">Stream Health & Log Flow</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center p-3 bg-slate-800/30 rounded-lg border border-slate-800/50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    <span className="text-sm font-medium text-slate-300">Backend Stream Processor</span>
+                  </div>
+                  <span className="text-xs font-mono text-slate-500">READY</span>
+                </div>
+                <p className="text-xs text-slate-500 italic">
+                  Note: Real-time events from SSE streams will automatically appear in your main "Logs" tab and the "Debug Console" below, marked with method <span className="text-blue-500 font-bold">SSE</span>.
+                </p>
               </div>
             </div>
           </div>

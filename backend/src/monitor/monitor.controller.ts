@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 import { MonitorLog } from './entities/monitor-log.entity';
 import { AuthLog } from './entities/auth-log.entity';
 import { MonitorEngineService } from './monitor-engine/monitor-engine.service';
+import { MonitorSSEService } from './monitor-sse.service';
 import { Subject, ReplaySubject, Observable, map } from 'rxjs';
 import { MonitorConfigService } from './monitor-config.service';
 import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
@@ -34,6 +35,7 @@ export class MonitorController {
     private readonly openapiParser: OpenapiParserService,
     private readonly oauthManager: OauthManagerService,
     private readonly monitorEngine: MonitorEngineService,
+    private readonly monitorSSE: MonitorSSEService,
     @InjectQueue('monitor') private readonly monitorQueue: Queue,
     private readonly mailService: MailService,
   ) { }
@@ -154,6 +156,18 @@ export class MonitorController {
   ) {
     this.configService.updateConfig(config);
     return { success: true, config: this.configService.getConfig() };
+  }
+
+  @Post('sse/start')
+  async startSSE(@Body('path') path?: string) {
+    await this.monitorSSE.startMonitoring(path);
+    return { success: true, message: `SSE Monitoring started for ${path || 'all devices'}` };
+  }
+
+  @Post('sse/stop')
+  async stopSSE(@Body('path') path: string) {
+    this.monitorSSE.stopMonitoring(path);
+    return { success: true, message: `SSE Monitoring stopped for ${path}` };
   }
 
   @Post('trigger-report')
