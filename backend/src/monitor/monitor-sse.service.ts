@@ -30,7 +30,7 @@ export class MonitorSSEService implements OnModuleDestroy {
     async startMonitoring(path: string = '/devices/all/events') {
         const config = this.configService.getConfig();
         const deviceId = config.deviceId || 'TRIAL_DEVICE_ID';
-        const dynamicPath = path.replace(/{deviceId}/g, deviceId);
+        const dynamicPath = path.replace(/\{deviceId\}/g, deviceId);
 
         if (this.activeStreams.has(dynamicPath)) {
             this.logger.warn(`Stream for ${dynamicPath} is already active.`);

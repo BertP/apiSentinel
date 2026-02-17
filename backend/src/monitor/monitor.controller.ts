@@ -92,8 +92,16 @@ export class MonitorController {
 
   @Get('stats')
   async getStats() {
+    const config = this.configService.getConfig();
+    const activePaths = config.activeEndpoints;
+
+    if (activePaths.length === 0) {
+      return [];
+    }
+
     const stats = await this.logRepository
       .createQueryBuilder('log')
+      .where('log.path IN (:...activePaths)', { activePaths })
       .select([
         'log.path',
         'log.method',
