@@ -108,24 +108,32 @@ export class MonitorController {
         'COUNT(log.id) as count',
         'SUM(CASE WHEN log.success = true THEN 1 ELSE 0 END) as "successCount"',
         'AVG(log.latency) as "avgLatency"',
-        'MAX(log.statusCode) as "lastStatus"',
         'MAX(log.timestamp) as "lastTimestamp"',
-        'MAX(log.deviceId) as "deviceId"',
       ])
       .groupBy('log.path')
       .addGroupBy('log.method')
       .getRawMany();
 
-    return stats.map(s => ({
-      path: s.log_path,
-      method: s.log_method,
-      count: parseInt(s.count),
-      successCount: parseInt(s.successCount),
-      avgLatency: parseFloat(s.avgLatency),
-      lastStatus: s.lastStatus,
-      lastTimestamp: s.lastTimestamp,
-      deviceId: s.deviceId
+    const enrichedStats = await Promise.all(stats.map(async s => {
+      const latest = await this.logRepository.findOne({
+        where: { path: s.log_path, method: s.log_method },
+        order: { timestamp: 'DESC' },
+        select: ['statusCode', 'deviceId']
+      });
+
+      return {
+        path: s.log_path,
+        method: s.log_method,
+        count: parseInt(s.count),
+        successCount: parseInt(s.successCount),
+        avgLatency: parseFloat(s.avgLatency),
+        lastStatus: latest?.statusCode || 0,
+        lastTimestamp: s.lastTimestamp,
+        deviceId: latest?.deviceId
+      };
     }));
+
+    return enrichedStats;
   }
 
   @Get('account-overview')
