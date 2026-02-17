@@ -170,6 +170,118 @@ export class MonitorController {
     return { success: true, message: `SSE Monitoring stopped for ${path}` };
   }
 
+  @Sse('sse/raw')
+  sseRaw(): Observable<MessageEvent> {
+    return this.monitorSSE.rawEventSubject
+      .asObservable()
+      .pipe(map((event) => ({ data: event }) as MessageEvent));
+  }
+
+  @Get('sse-viewer')
+  getSSEViewer() {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API SENTINEL | Live SSE Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'JetBrains+Mono', monospace; }
+        .log-entry:hover { background: rgba(59, 130, 246, 0.05); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    </style>
+</head>
+<body class="bg-[#020617] text-slate-300 min-h-screen flex flex-col overflow-hidden">
+    <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 p-1 rounded shadow-lg shadow-blue-500/20">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+            <h1 class="text-sm font-black tracking-widest text-slate-100 uppercase italic">Live SSE Terminal</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <div id="status" class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700">
+                <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Connecting...</span>
+            </div>
+            <button onclick="clearLogs()" class="text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest">Clear</button>
+        </div>
+    </header>
+
+    <div id="logs" class="flex-1 overflow-y-auto p-4 space-y-1 text-xs">
+        <!-- Logs will appear here -->
+    </div>
+
+    <script>
+        const logsContainer = document.getElementById('logs');
+        const statusContainer = document.getElementById('status');
+        const eventSource = new EventSource('/monitor/sse/raw');
+
+        eventSource.onopen = () => {
+            statusContainer.innerHTML = \`<div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div><span class="text-[10px] font-bold text-green-500 uppercase tracking-tighter">Streaming Live</span>\`;
+        };
+
+        eventSource.onerror = () => {
+            statusContainer.innerHTML = \`<div class="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></div><span class="text-[10px] font-bold text-red-500 uppercase tracking-tighter">Connection Failed</span>\`;
+        };
+
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            addLog(data.path, data.data);
+        };
+
+        function addLog(path, content) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry py-2 px-3 rounded border border-transparent hover:border-slate-800 transition-all duration-200 group';
+            
+            let parsed;
+            try {
+                parsed = JSON.parse(content);
+            } catch {
+                parsed = content;
+            }
+
+            const timestamp = new Date().toLocaleTimeString();
+            
+            entry.innerHTML = \`
+                <div class="flex items-start gap-4">
+                    <span class="text-slate-600 font-bold shrink-0 uppercase tracking-tighter text-[10px] mt-0.5">\${timestamp}</span>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-blue-500 font-black text-[10px] brightness-125 uppercase tracking-widest">SSE_UPDATE</span>
+                            <span class="text-slate-500 font-mono text-[10px]">\${path}</span>
+                        </div>
+                        <pre class="text-slate-300 font-mono whitespace-pre-wrap break-all">\${JSON.stringify(parsed, null, 2)}</pre>
+                    </div>
+                </div>
+            \`;
+
+            logsContainer.appendChild(entry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+
+            // Keep only last 100 entries to prevent memory leak
+            if (logsContainer.children.length > 100) {
+                logsContainer.removeChild(logsContainer.firstChild);
+            }
+        }
+
+        function clearLogs() {
+            logsContainer.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
+    `;
+  }
+
   @Post('trigger-report')
   async triggerReport() {
     await this.monitorQueue.add('daily-report', {});

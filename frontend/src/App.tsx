@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2, Smartphone, Radio, Settings } from 'lucide-react';
+import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2, Smartphone, Radio, Settings, ExternalLink } from 'lucide-react';
 import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { DebugTerminal } from './components/DebugTerminal';
 import { ConfigPanel } from './components/ConfigPanel';
@@ -347,11 +347,18 @@ function App() {
 
         {activeTab === 'streams' && (
           <div className="space-y-6">
-            <header className="flex justify-between items-end">
+            <header className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-3xl font-black tracking-tight text-white mb-2">LIVE EVENT MONITOR</h2>
                 <p className="text-slate-500 font-medium">Manage and monitor persistent Server-Sent Event (SSE) streams.</p>
               </div>
+              <button
+                onClick={() => window.open(`${API_BASE}/sse-viewer`, '_blank')}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/20 text-sm whitespace-nowrap"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Open Live Terminal
+              </button>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

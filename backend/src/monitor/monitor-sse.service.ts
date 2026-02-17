@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
 import { OauthManagerService } from './oauth-manager/oauth-manager.service';
 import { MonitorConfigService } from './monitor-config.service';
 import { MonitorLog } from './entities/monitor-log.entity';
@@ -13,6 +13,7 @@ import * as readline from 'readline';
 export class MonitorSSEService implements OnModuleDestroy {
     private readonly logger = new Logger(MonitorSSEService.name);
     private activeStreams: Map<string, any> = new Map();
+    public readonly rawEventSubject = new Subject<{ path: string; data: string }>();
 
     constructor(
         private readonly httpService: HttpService,
@@ -64,6 +65,7 @@ export class MonitorSSEService implements OnModuleDestroy {
                 if (line.startsWith('data:')) {
                     const dataStr = line.replace('data:', '').trim();
                     if (dataStr) {
+                        this.rawEventSubject.next({ path, data: dataStr });
                         this.handleEvent(path, dataStr);
                     }
                 }
