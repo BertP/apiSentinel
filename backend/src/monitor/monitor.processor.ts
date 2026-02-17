@@ -45,44 +45,10 @@ export class MonitorProcessor {
       return;
     }
 
-    // --- Cooling Device Logic: Pre-flight GET for PUT actions ---
-    let coolingPayload = undefined;
-    if (method.toUpperCase() === 'PUT' && path.includes('/actions')) {
-      this.logger.log(`Cooling Logic: Pre-flight GET /actions for ${path}`);
-      const getResult = await this.monitorEngine.checkEndpoint(baseUrl, {
-        path,
-        method: 'GET',
-      });
-      await this.recordLog(path, 'GET', getResult);
-
-      if (!getResult.success) {
-        this.logger.warn(`Cooling Logic: Pre-flight GET failed for ${path}. Aborting PUT.`);
-        return;
-      }
-
-      const availableActions = getResult.data?.processAction || getResult.data?.processaction || [];
-      this.logger.log(`Cooling Logic: Available actions found: ${JSON.stringify(availableActions)}`);
-
-      // Take consideration of which action to send:
-      // Prioritize cooling-related actions (4: SuperFreezing, 5: SuperCooling/Running)
-      if (availableActions.includes(4)) {
-        coolingPayload = { processAction: 4 };
-      } else if (availableActions.includes(5)) {
-        coolingPayload = { processAction: 5 };
-      } else if (availableActions.length > 0) {
-        // Fallback to first available action to ensure the PUT is valid
-        coolingPayload = { processAction: availableActions[0] };
-      }
-
-      if (coolingPayload) {
-        this.logger.log(`Cooling Logic: Selected action ${JSON.stringify(coolingPayload)} based on pre-flight GET.`);
-      }
-    }
-
     const result = await this.monitorEngine.checkEndpoint(baseUrl, {
       path,
       method,
-    }, coolingPayload);
+    });
 
     await this.recordLog(path, method, result);
 
