@@ -92,35 +92,32 @@ export class MonitorController {
 
   @Get('stats')
   async getStats() {
-    const logs = await this.logRepository.find({
-      order: { timestamp: 'DESC' },
-      take: 1000,
-    });
+    const stats = await this.logRepository
+      .createQueryBuilder('log')
+      .select([
+        'log.path',
+        'log.method',
+        'COUNT(log.id) as count',
+        'SUM(CASE WHEN log.success = true THEN 1 ELSE 0 END) as "successCount"',
+        'AVG(log.latency) as "avgLatency"',
+        'MAX(log.statusCode) as "lastStatus"',
+        'MAX(log.timestamp) as "lastTimestamp"',
+        'MAX(log.deviceId) as "deviceId"',
+      ])
+      .groupBy('log.path')
+      .addGroupBy('log.method')
+      .getRawMany();
 
-    // Group by path and method for overview
-    const stats: Record<string, any> = {};
-    logs.forEach((log) => {
-      const key = `${log.method} ${log.path}`;
-      if (!stats[key]) {
-        stats[key] = {
-          path: log.path,
-          method: log.method,
-          count: 0,
-          successCount: 0,
-          avgLatency: 0,
-          lastStatus: log.statusCode,
-          lastTimestamp: log.timestamp,
-          deviceId: log.deviceId,
-        };
-      }
-      stats[key].count++;
-      if (log.success) stats[key].successCount++;
-      stats[key].avgLatency =
-        (stats[key].avgLatency * (stats[key].count - 1) + log.latency) /
-        stats[key].count;
-    });
-
-    return Object.values(stats);
+    return stats.map(s => ({
+      path: s.log_path,
+      method: s.log_method,
+      count: parseInt(s.count),
+      successCount: parseInt(s.successCount),
+      avgLatency: parseFloat(s.avgLatency),
+      lastStatus: s.lastStatus,
+      lastTimestamp: s.lastTimestamp,
+      deviceId: s.deviceId
+    }));
   }
 
   @Get('account-overview')

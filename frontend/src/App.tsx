@@ -69,7 +69,17 @@ function App() {
   useEffect(() => {
     fetchData();
     const interval = setInterval(fetchData, 5000);
-    return () => clearInterval(interval);
+
+    const eventSource = new EventSource(`${API_BASE}/events`);
+    eventSource.onmessage = (event) => {
+      const newLog = JSON.parse(event.data);
+      setLogs(prev => [newLog, ...prev].slice(0, 100));
+    };
+
+    return () => {
+      clearInterval(interval);
+      eventSource.close();
+    };
   }, []);
 
   const getChartData = (path: string, method: string) => {

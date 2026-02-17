@@ -3,6 +3,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity()
@@ -10,9 +11,11 @@ export class MonitorLog {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column()
   path: string;
 
+  @Index()
   @Column({ nullable: true })
   deviceId: string;
 
@@ -43,6 +46,7 @@ export class MonitorLog {
   @Column({ type: 'jsonb', nullable: true })
   requestData: any;
 
+  @Index()
   @CreateDateColumn()
   timestamp: Date;
 }

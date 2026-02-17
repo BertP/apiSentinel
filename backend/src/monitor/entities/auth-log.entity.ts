@@ -3,6 +3,7 @@ import {
   Column,
   PrimaryGeneratedColumn,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 @Entity()
@@ -10,6 +11,7 @@ export class AuthLog {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @CreateDateColumn()
   timestamp: Date;
 
