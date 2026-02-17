@@ -36,6 +36,7 @@ The backend is modularized into specialized services within the `monitor` module
   - Supports "Password Grant" flow.
   - Maintains an internal cache with automatic refresh logic.
 - **MonitorEngineService**: Encapsulates the actual HTTP execution logic. It standardizes the `User-Agent` and maps external API responses into the internal `MonitorLog` schema.
+- **MonitorSSEService**: Manages persistent, long-lived background connections to Miele's event streams. It broadcasts raw events to the internal subject and handles the standalone terminal bridge.
 - **OpenapiParserService**: A utility service that translates complex YAML definitions into structured endpoint lists used by both the scheduler and the frontend.
 
 ### 3. Real-time & Data

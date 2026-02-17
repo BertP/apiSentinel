@@ -31,12 +31,13 @@ The fastest way to get API Sentinel running is using Docker Compose.
 
 ## ✨ Core Features
 
-- **Spec-Driven Monitoring**: Automatically discovers and monitors endpoints defined in `openapi.yaml`.
-- **Advanced OAuth2 Management**: Handles Password Grant flows, automatic token refreshes, and manual token overrides.
-- **Real-Time Data Streams**: Uses Server-Sent Events (SSE) to push monitoring logs to the UI instantly.
-- **Glassmorphic UI**: High-performance dashboard with live latency charts, health widgets, and a built-in debug terminal.
-- **Periodic Health Verification**: Automated OAuth2 flow verification every 6 hours with detailed success/failure statistics.
-- **Containerized Architecture**: Production-ready deployment using PostgreSQL, Redis, and NestJS.
+- **Live SSE Monitor**: A dedicated, real-time terminal window for tracking raw Server-Sent Events with sub-millisecond latency.
+- **Spec-Driven Monitoring**: Automatically discovers and monitors endpoints defined in `openapi.yaml`, natively supporting Miele MCS3 parameters.
+- **Interactive Dashboard**: Real-time performance metrics (latency, health, status) with the ability to dynamically manage (add/delete) monitoring cards.
+- **Account Overview**: A specialized view for managing and inspecting all Miele devices registered to the account.
+- **Advanced OAuth2 Management**: Multi-tier auth handling with automatic token refreshes, manual overrides, and periodic health verification.
+- **Dynamic Parameter Injection**: Automatically replaces `{deviceId}` placeholders in request paths using your globally configured device ID.
+- **High-Performance Architecture**: Optimized for scale with PostgreSQL indexing, SQL aggregations, and real-time SSE log synchronization.
 
 ## 📁 Project Structure
 
