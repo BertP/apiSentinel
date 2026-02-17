@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Activity, Shield, List, BarChart3, AlertCircle, CheckCircle2, Smartphone, Radio, Settings, ExternalLink, Trash2 } from 'lucide-react';
 import { Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { DebugTerminal } from './components/DebugTerminal';
+import { SplitMonitor } from './components/SplitMonitor';
 import { ConfigPanel } from './components/ConfigPanel';
 import { AuthHealthWidget } from './components/AuthHealthWidget';
 import { ResponseViewer } from './components/ResponseViewer';
@@ -472,7 +472,7 @@ function App() {
           </div>
         )}
       </main>
-      <DebugTerminal onLogClick={(log) => setSelectedLog(log as any)} />
+      <SplitMonitor />
       {isConfigOpen && <ConfigPanel onClose={() => setIsConfigOpen(false)} />}
       {selectedLog && (
         <ResponseViewer

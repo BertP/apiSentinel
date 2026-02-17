@@ -4,6 +4,17 @@ Welcome to API Sentinel! This guide will help you navigate and master your new A
 
 ---
 
+## 🚦 Polling vs. Live Monitoring
+
+API Sentinel uses two distinct methods to keep tabs on your Miele appliances:
+
+| Method | Description | Best For |
+| :--- | :--- | :--- |
+| **Polling** | Regular checks (e.g., every 60s) of specific REST endpoints. | Trends, Latency, & Historical Health. |
+| **Live Monitoring** | Persistent SSE streams for real-time state changes. | Instant Feedback & Interaction Debugging. |
+
+---
+
 ## 🎛️ 1. The Dashboard
 The Dashboard is your nerve center. It displays "Request Cards" for every endpoint you are monitoring.
 
@@ -12,6 +23,9 @@ The Dashboard is your nerve center. It displays "Request Cards" for every endpoi
 - **Uptime Bar**: A visual indicator of success vs. failure rates.
 - **Status Code**: The large number on the right shows the HTTP response from the last check.
 - **Avg Latency**: The big number on the left is the rolling average response time.
+
+> [!TIP]
+> **Pro Tip**: Click on any chart or status code to open the **Payload Inspector**, where you can see the exact JSON sent and received.
 
 ### 🗑️ Removing a Card
 Hover over any card and click the 🗑️ **Trash** icon in the top-right corner to stop monitoring that endpoint immediately.
@@ -28,10 +42,8 @@ Click the ⚙️ **Settings** button in the sidebar to open the configuration pa
 ### 🆔 Target Device ID
 Enter your Miele **Device ID** (e.g., `000123456789`) in the settings. API Sentinel will automatically replace any `{deviceId}` placeholders in request paths with this value.
 
-### 📡 Active Endpoints
-- Search for endpoints defined in your `openapi.yaml`.
-- Click the **Checkmark** to start monitoring an endpoint.
-- Click the **Shield** icon to designate an endpoint for **Alerting** (requires email configuration).
+> [!IMPORTANT]
+> Change the Device ID globally to switch monitoring focus between different appliances without re-adding endpoints.
 
 ---
 
@@ -56,14 +68,13 @@ The **Devices** tab provides a real-time list of all appliances connected to you
 ## 📬 5. Alerts & Reports
 - **Real-time Alerts**: If an alert-enabled endpoint fails 5 times in a row, API Sentinel will email your configured recipients.
 - **Daily Reports**: Every 24 hours, you'll receive a summary report of all activity and success rates.
-- **Test Connections**: Use the "Test Email Connection" button in Settings to verify your SMTP setup.
 
 ---
 
-## 📚 6. Troubleshooting
-- **Zombie Cards**: If a card doesn't disappear when deleted, refresh the page.
-- **Red Charts**: Frequent red indicators usually mean your OAuth2 token has expired or the target server is down. Check the **Auth Health Widget** on the dashboard.
-- **Terminal Logs**: Check the bottom of the dashboard for a raw scrolling feed of all system actions.
+## 📚 6. Deep Dives & Troubleshooting
+For more advanced information, refer to:
+- [**Architecture Guide](./ARCHITECTURE.md)**: How the systems work under the hood.
+- [**Troubleshooting Guide](./TROUBLESHOOTING.md)**: Common errors and fixes.
 
 ---
 *Built for precision. Built for reliability. Built for you.*

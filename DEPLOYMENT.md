@@ -94,22 +94,72 @@ sudo ufw allow 3000/tcp # Backend API
 sudo ufw enable
 ```
 
-## 5. Maintenance & Monitoring
+## 5. Maintenance & Operations
 
-### Common Commands
-- **Check Status**: `docker compose ps`
-- **View Logs**: `docker compose logs -f`
-- **Restart Services**: `docker compose restart`
-
-### Real-Time Monitoring
-API Sentinel uses **Server-Sent Events (SSE)**. Ensure your reverse proxy (if using Nginx) is configured to handle long-lived connections:
-```nginx
-proxy_set_header Connection '';
-proxy_http_version 1.1;
-chunked_transfer_encoding off;
+### Docker Housekeeping
+To prevent logs from consuming all disk space, implement a log rotation policy in your `docker-compose.yml`:
+```yaml
+services:
+  backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 ```
 
-## 6. Environment Configuration (.env)
+### Essential Commands
+- **Check Status**: `docker compose ps`
+- **View Live Logs**: `docker compose logs -f backend`
+- **Update Application**:
+  ```bash
+  git pull
+  docker compose up -d --build
+  ```
+
+---
+
+## 🛡️ 6. Production Hardening
+
+### SSL/TLS with Nginx
+For production, always serve API Sentinel over HTTPS. Below is a sample configuration for an Nginx reverse proxy using Let's Encrypt:
+
+```nginx
+server {
+    listen 443 ssl;
+    server_name monitor.yourdomain.com;
+
+    ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+
+    location / {
+        proxy_pass http://localhost:5173; # Frontend
+    }
+
+    location /monitor/events {
+        proxy_pass http://localhost:3000; # Backend SSE
+        proxy_set_header Connection '';
+        proxy_http_version 1.1;
+        chunked_transfer_encoding off;
+        proxy_buffering off;
+        proxy_cache off;
+    }
+
+    location /docs {
+        proxy_pass http://localhost:3000; # Swagger
+    }
+}
+```
+
+### Database Backups
+Automate daily backups of your monitoring data:
+```bash
+docker exec -t api_monitor_db pg_dumpall -c -U api_monitor > dump_$(date +%Y-%m-%d).sql
+```
+
+---
+
+## ⚙️ 7. Environment Configuration (.env)
 
 The `.env` file is critical as it contains database credentials and sensitive OAuth2 secrets for the Miele API.
 
@@ -134,10 +184,9 @@ The `.env` file is critical as it contains database credentials and sensitive OA
 
 ---
 
-## 🛠️ Troubleshooting
+## 🩺 8. Monitoring the Monitor
 
-**Question: Containers keep restarting?**
-*Check logs: `docker compose logs backend`. Usually, this is due to missing environment variables.*
-
-**Question: Database connection failed?**
-*Ensure the `DATABASE_URL` in `.env` uses the service name `db` instead of `localhost` when running inside Docker.*
+You can verify the health of API Sentinel itself via these internal endpoints:
+- **Backend Liveness**: `GET http://localhost:3000/monitor/health`
+- **Auth Status**: Check the "Security" icon in the Dashboard sidebar.
+- **Queue Health**: `GET http://localhost:3000/monitor/stats`
