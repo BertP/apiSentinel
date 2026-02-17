@@ -72,18 +72,20 @@ export class MonitorSSEService implements OnModuleDestroy {
             });
 
             stream.on('end', () => {
-                this.logger.warn(`SSE Stream ${path} ended.`);
+                this.logger.warn(`SSE Stream ${path} ended. Reconnecting in 5s...`);
                 this.activeStreams.delete(path);
-                // Implement auto-reconnect here if needed
+                setTimeout(() => this.startMonitoring(path), 5000);
             });
 
             stream.on('error', (err: any) => {
-                this.logger.error(`SSE Stream ${path} error: ${err.message}`);
+                this.logger.error(`SSE Stream ${path} error: ${err.message}. Reconnecting in 10s...`);
                 this.activeStreams.delete(path);
+                setTimeout(() => this.startMonitoring(path), 10000);
             });
 
         } catch (err: any) {
-            this.logger.error(`Failed to connect to SSE ${path}: ${err.message}`);
+            this.logger.error(`Failed to connect to SSE ${path}: ${err.message}. Retrying in 30s...`);
+            setTimeout(() => this.startMonitoring(path), 30000);
         }
     }
 
@@ -103,6 +105,12 @@ export class MonitorSSEService implements OnModuleDestroy {
     }
 
     private async handleEvent(path: string, dataStr: string) {
+        // Handle Miele SSE "ping" heartbeats
+        if (dataStr === 'ping') {
+            this.logger.debug(`SSE Ping received from ${path}`);
+            return;
+        }
+
         try {
             const data = JSON.parse(dataStr);
             this.logger.log(`SSE Event from ${path}: Received update`);

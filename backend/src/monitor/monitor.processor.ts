@@ -39,6 +39,12 @@ export class MonitorProcessor {
 
     this.logger.log(`Processing check for ${method} ${path} on ${baseUrl}`);
 
+    // Skip SSE endpoints in regular polling (they are handled by MonitorSSEService)
+    if (path.includes('/events')) {
+      this.logger.debug(`Skipping polling for SSE endpoint: ${path}`);
+      return;
+    }
+
     const result = await this.monitorEngine.checkEndpoint(baseUrl, {
       path,
       method,
