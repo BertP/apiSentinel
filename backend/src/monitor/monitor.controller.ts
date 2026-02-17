@@ -11,6 +11,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MonitorLog } from './entities/monitor-log.entity';
 import { AuthLog } from './entities/auth-log.entity';
+import { MonitorEngineService } from './monitor-engine/monitor-engine.service';
 import { Subject, ReplaySubject, Observable, map } from 'rxjs';
 import { MonitorConfigService } from './monitor-config.service';
 import { OpenapiParserService } from './openapi-parser/openapi-parser.service';
@@ -32,6 +33,7 @@ export class MonitorController {
     private readonly configService: MonitorConfigService,
     private readonly openapiParser: OpenapiParserService,
     private readonly oauthManager: OauthManagerService,
+    private readonly monitorEngine: MonitorEngineService,
     @InjectQueue('monitor') private readonly monitorQueue: Queue,
     private readonly mailService: MailService,
   ) { }
@@ -117,6 +119,12 @@ export class MonitorController {
     });
 
     return Object.values(stats);
+  }
+
+  @Get('account-overview')
+  async getAccountOverview() {
+    const baseUrl = process.env.MIELE_API_BASE_URL || 'https://api.mcs3.miele.com/v1';
+    return this.monitorEngine.getAccountOverview(baseUrl);
   }
 
   @Get('available-endpoints')

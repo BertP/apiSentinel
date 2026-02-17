@@ -33,21 +33,34 @@ interface Log {
   requestData?: any;
 }
 
+interface AccountDevice {
+  deviceId: string;
+  typeRaw: number;
+  typeLocalized: string;
+  fabNumber: string;
+  protocolVersion: number;
+  deviceName: string;
+  techType: string;
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [stats, setStats] = useState<Stat[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
+  const [accountDevices, setAccountDevices] = useState<AccountDevice[]>([]);
   const [selectedLog, setSelectedLog] = useState<Log | null>(null);
 
   const fetchData = async () => {
     try {
-      const [statsRes, logsRes] = await Promise.all([
+      const [statsRes, logsRes, devicesRes] = await Promise.all([
         axios.get(`${API_BASE}/stats`),
-        axios.get(`${API_BASE}/logs`)
+        axios.get(`${API_BASE}/logs`),
+        axios.get(`${API_BASE}/account-overview`)
       ]);
       setStats(statsRes.data);
       setLogs(logsRes.data);
+      setAccountDevices(devicesRes.data);
     } catch (err) {
       console.error('Error fetching data:', err);
     }
@@ -99,6 +112,13 @@ function App() {
             <span className="font-medium">Logs</span>
           </button>
           <button
+            onClick={() => setActiveTab('devices')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${activeTab === 'devices' ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40 translate-x-1' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+          >
+            <Shield className="w-5 h-5" />
+            <span className="font-medium">Devices</span>
+          </button>
+          <button
             onClick={() => setIsConfigOpen(true)}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-all duration-200"
           >
@@ -130,7 +150,7 @@ function App() {
           </div>
         </header>
 
-        {activeTab === 'dashboard' ? (
+        {activeTab === 'dashboard' && (
           <div className="space-y-8">
             <AuthHealthWidget />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -213,7 +233,9 @@ function App() {
               ))}
             </div>
           </div>
-        ) : (
+        )}
+
+        {activeTab === 'logs' && (
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -272,6 +294,46 @@ function App() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'devices' && (
+          <div className="space-y-6">
+            <header className="flex justify-between items-end">
+              <div>
+                <h2 className="text-3xl font-black tracking-tight text-white mb-2">ACCOUNT OVERVIEW</h2>
+                <p className="text-slate-500 font-medium">Detailed list of all devices mapped to this account.</p>
+              </div>
+            </header>
+
+            <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden backdrop-blur-xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-800/50 border-b border-slate-800">
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Type (Raw)</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Type (Localized)</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">FabNumber</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Protocol</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Device Name</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Tech Type</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/50">
+                    {accountDevices.map((device) => (
+                      <tr key={device.deviceId} className="hover:bg-slate-800/30 transition-colors group">
+                        <td className="px-6 py-4 text-sm font-mono text-slate-400">{device.typeRaw}</td>
+                        <td className="px-6 py-4 font-medium text-slate-200">{device.typeLocalized}</td>
+                        <td className="px-6 py-4 text-sm font-mono text-slate-500">{device.fabNumber}</td>
+                        <td className="px-6 py-4 text-xs font-mono text-slate-500">v{device.protocolVersion}</td>
+                        <td className="px-6 py-4 text-sm text-slate-300">{device.deviceName || '-'}</td>
+                        <td className="px-6 py-4 text-sm text-slate-400">{device.techType}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

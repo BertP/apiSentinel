@@ -110,6 +110,35 @@ export class MonitorEngineService {
     }
   }
 
+  async getAccountOverview(baseUrl: string) {
+    try {
+      this.logger.log('Fetching account overview from /devices...');
+      const token = await this.oauthManager.getAccessToken();
+      const headers = {
+        'User-Agent': 'API-Sentinel/v0.0.1',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      const response = await firstValueFrom(
+        this.httpService.get(`${baseUrl}/devices`, { headers, timeout: 10000 })
+      );
+
+      const devices = response.data;
+      return Object.entries(devices).map(([deviceId, data]: [string, any]) => ({
+        deviceId,
+        typeRaw: data.ident?.type?.value_raw,
+        typeLocalized: data.ident?.type?.value_localized,
+        fabNumber: data.ident?.deviceIdentLabel?.fabNumber,
+        protocolVersion: data.ident?.protocolVersion,
+        deviceName: data.ident?.deviceName,
+        techType: data.ident?.deviceIdentLabel?.techType,
+      }));
+    } catch (err) {
+      this.logger.error(`Failed to fetch account overview: ${err.message}`);
+      throw err;
+    }
+  }
+
   private validateResponse(
     path: string,
     method: string,
