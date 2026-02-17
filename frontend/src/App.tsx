@@ -360,6 +360,7 @@ function App() {
                       <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Protocol</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Device Name</th>
                       <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Tech Type</th>
+                      <th className="px-6 py-4 text-[10px] font-black uppercase text-slate-500 tracking-widest">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/50">
@@ -371,6 +372,11 @@ function App() {
                         <td className="px-6 py-4 text-xs font-mono text-slate-500">v{device.protocolVersion}</td>
                         <td className="px-6 py-4 text-sm text-slate-300">{device.deviceName || '-'}</td>
                         <td className="px-6 py-4 text-sm text-slate-400">{device.techType}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${device.statusLocalized === 'Running' || device.statusLocalized === 'In Betrieb' || device.statusLocalized?.includes('Running') ? 'bg-green-500/10 text-green-500' : 'bg-slate-800 text-slate-400'}`}>
+                            {device.statusLocalized || 'Unknown'}
+                          </span>
+                        </td>
                       </tr>
                     ))}
                   </tbody>

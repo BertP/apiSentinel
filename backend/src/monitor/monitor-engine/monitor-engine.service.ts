@@ -134,6 +134,7 @@ export class MonitorEngineService {
           protocolVersion: data.ident?.protocolVersion,
           deviceName: data.ident?.deviceName,
           techType: data.ident?.deviceIdentLabel?.techType,
+          statusLocalized: data.state?.status?.value_localized,
         }))
         .sort((a, b) => (a.typeRaw || 0) - (b.typeRaw || 0));
     } catch (err) {
